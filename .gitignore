@@ -18,6 +18,8 @@ server/**/*.user
 server/**/*.suo
 server/**/.vs/
 server/**/*.csproj.user
+server/.env
+server/dev-list.md
 
 ## IDE
 .vscode/

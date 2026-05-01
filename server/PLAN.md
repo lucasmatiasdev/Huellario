@@ -10,7 +10,7 @@
 | SQL Server / PostgreSQL  | Base de datos relacional                            |
 | JWT (JSON Web Token)     | Autenticación stateless                             |
 | ASP.NET Core Identity    | Gestión de usuarios y roles                         |
-| AutoMapper               | Mapeo entre entidades y DTOs                        |
+| Mapster                  | Mapeo entre entidades y DTOs                        |
 | FluentValidation         | Validación de requests                              |
 | MediatR (opcional)       | Patrón mediator / CQRS                              |
 | Swagger / Swashbuckle    | Documentación interactiva de API                    |
@@ -511,7 +511,7 @@ server/
 | infrastructure | Microsoft.AspNetCore.Identity.EntityFrameworkCore |
 | server         | Microsoft.AspNetCore.Authentication.JwtBearer |
 | server         | Microsoft.AspNetCore.Identity.UI              |
-| application    | AutoMapper.Extensions.Microsoft.DependencyInjection |
+| application    | Mapster                                              |
 | application    | FluentValidation.AspNetCore                   |
 | application    | MediatR (opcional)                            |
 | server         | Swashbuckle.AspNetCore (ya agregado)          |
