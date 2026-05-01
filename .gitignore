@@ -1,0 +1,48 @@
+## Node / Frontend (client)
+client/node_modules/
+client/.next/
+client/out/
+client/build
+client/.env
+client/.env.local
+client/.env.development.local
+client/.env.production.local
+client/*.tsbuildinfo
+client/next-env.d.ts
+client/.vercel
+
+## .NET / Backend (server)
+server/**/bin/
+server/**/obj/
+server/**/*.user
+server/**/*.suo
+server/**/.vs/
+server/**/*.csproj.user
+
+## IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+## OS
+.DS_Store
+Thumbs.db
+
+## Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+## Secrets
+.env
+.env.*
+!env.example
+!*.env.example
+*.pem
+*.key
+
+## Docker
+docker-compose.override.yml
