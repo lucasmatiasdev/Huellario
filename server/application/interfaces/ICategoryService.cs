@@ -1,6 +1,6 @@
-namespace application.interfaces;
-
 using domain.dtos.Category;
+
+namespace application.interfaces;
 
 public interface ICategoryService
 {

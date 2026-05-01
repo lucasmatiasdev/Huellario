@@ -27,5 +27,9 @@ public class CategoryConfiguration : IEntityTypeConfiguration<Category>
 
         builder.Property(c => c.ImagenUrl)
             .HasMaxLength(500);
+
+        builder.Property(c => c.IsActive)
+            .IsRequired()
+            .HasDefaultValue(true);
     }
 }

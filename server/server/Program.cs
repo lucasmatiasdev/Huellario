@@ -1,6 +1,7 @@
 using System.Text;
 using application.implementations;
 using application.interfaces;
+using domain.dtos.Brand;
 using domain.dtos.Category;
 using domain.entities;
 using domain.interfaces;
@@ -24,6 +25,9 @@ DotNetEnv.Env.TraversePath().Load();
 TypeAdapterConfig<Category, CategoryDto>.NewConfig();
 TypeAdapterConfig<CreateCategoryDto, Category>.NewConfig();
 TypeAdapterConfig<UpdateCategoryDto, Category>.NewConfig();
+TypeAdapterConfig<Brand, BrandDto>.NewConfig();
+TypeAdapterConfig<CreateBrandDto, Brand>.NewConfig();
+TypeAdapterConfig<UpdateBrandDto, Brand>.NewConfig();
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -118,6 +122,8 @@ builder.Services.AddCors(options =>
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
+builder.Services.AddScoped<IBrandRepository, BrandRepository>();
+builder.Services.AddScoped<IBrandService, BrandService>();
 
 var app = builder.Build();
 
@@ -134,5 +140,13 @@ app.UseCors("AllowFrontend");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+
+// Seed data
+/*using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<HuellarioDbContext>();
+    await DataSeeder.SeedCategoriesAsync(context);
+    await DataSeeder.SeedBrandsAsync(context);
+}*/
 
 app.Run();
