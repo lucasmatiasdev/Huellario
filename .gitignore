@@ -20,6 +20,8 @@ server/**/.vs/
 server/**/*.csproj.user
 server/.env
 server/dev-list.md
+server/infrastructure/migrations/*
+server/infrastructure/seed/*
 
 ## IDE
 .vscode/

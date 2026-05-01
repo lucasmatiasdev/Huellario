@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 
-namespace Huellario.Infrastructure.Identity;
+namespace infrastructure.identity;
 
 public class HuellarioIdentityUser : IdentityUser
 {

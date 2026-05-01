@@ -1,7 +1,16 @@
 using System.Text;
-using Huellario.Infrastructure.Data;
-using Huellario.Infrastructure.Identity;
+using application.implementations;
+using application.interfaces;
+using domain.dtos.Category;
+using domain.entities;
+using domain.interfaces;
+using infrastructure.data;
+using infrastructure.repositories;
+using infrastructure.seed;
+using infrastructure.identity;
+using infrastructure.implementations;
 using Huellario.Server.Middleware;
+using Mapster;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -10,6 +19,11 @@ using Microsoft.OpenApi.Models;
 
 // Cargar variables de entorno desde .env (buscando hacia arriba en el árbol de directorios)
 DotNetEnv.Env.TraversePath().Load();
+
+// Mapster config
+TypeAdapterConfig<Category, CategoryDto>.NewConfig();
+TypeAdapterConfig<CreateCategoryDto, Category>.NewConfig();
+TypeAdapterConfig<UpdateCategoryDto, Category>.NewConfig();
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -99,6 +113,11 @@ builder.Services.AddCors(options =>
               .AllowCredentials();
     });
 });
+
+// DI registrations
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
+builder.Services.AddScoped<ICategoryService, CategoryService>();
 
 var app = builder.Build();
 
