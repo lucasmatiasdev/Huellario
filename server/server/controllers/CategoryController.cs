@@ -2,7 +2,7 @@ using application.interfaces;
 using domain.dtos.Category;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Huellario.Server.controllers;
+namespace server.controllers;
 
 [ApiController]
 [Route("api/category")]

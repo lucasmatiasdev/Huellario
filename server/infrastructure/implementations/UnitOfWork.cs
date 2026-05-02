@@ -15,8 +15,10 @@ public class UnitOfWork : IUnitOfWork
 
     private ICategoryRepository? _categories;
     private IBrandRepository? _brands;
+    private IUserRepository? _users;
     public ICategoryRepository Categories => _categories ??= new CategoryRepository(_context);
     public IBrandRepository Brands => _brands ??= new BrandRepository(_context);
+    public IUserRepository Users => _users ??= new UserRepository(_context);
 
     public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {

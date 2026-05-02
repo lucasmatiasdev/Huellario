@@ -1,7 +1,7 @@
 using System.Net;
 using System.Text.Json;
 
-namespace Huellario.Server.Middleware;
+namespace server.Middleware;
 
 public class ExceptionMiddleware
 {
