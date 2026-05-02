@@ -1,7 +1,7 @@
 using domain.dtos.Auth;
 using domain.entities;
 using domain.interfaces;
-using Huellario.Server.Services;
+using server.services;
 using infrastructure.identity;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;

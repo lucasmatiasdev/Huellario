@@ -3,6 +3,7 @@ using application.implementations;
 using application.interfaces;
 using domain.dtos.Brand;
 using domain.dtos.Category;
+using domain.dtos.Product;
 using domain.entities;
 using domain.interfaces;
 using infrastructure.data;
@@ -12,6 +13,8 @@ using infrastructure.identity;
 using infrastructure.implementations;
 using server.Middleware;
 using server.services;
+using application.validators.Product;
+using FluentValidation;
 using Mapster;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
@@ -29,6 +32,19 @@ TypeAdapterConfig<UpdateCategoryDto, Category>.NewConfig();
 TypeAdapterConfig<Brand, BrandDto>.NewConfig();
 TypeAdapterConfig<CreateBrandDto, Brand>.NewConfig();
 TypeAdapterConfig<UpdateBrandDto, Brand>.NewConfig();
+TypeAdapterConfig<Product, ProductDto>.NewConfig()
+    .Map(dest => dest.Images, src => src.Images)
+    .Map(dest => dest.Variants, src => src.Variants);
+TypeAdapterConfig<Product, ProductListDto>.NewConfig()
+    .Map(dest => dest.MainImageUrl, src =>
+        src.Images.Where(i => i.IsMain).Select(i => i.Url).FirstOrDefault()
+        ?? src.Images.Select(i => i.Url).FirstOrDefault());
+TypeAdapterConfig<CreateProductDto, Product>.NewConfig();
+TypeAdapterConfig<UpdateProductDto, Product>.NewConfig();
+TypeAdapterConfig<Variant, VariantDto>.NewConfig();
+TypeAdapterConfig<CreateVariantDto, Variant>.NewConfig();
+TypeAdapterConfig<ProductImage, ProductImageDto>.NewConfig();
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -127,6 +143,10 @@ builder.Services.AddScoped<IBrandRepository, BrandRepository>();
 builder.Services.AddScoped<IBrandService, BrandService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IProductRepository, ProductRepository>();
+builder.Services.AddScoped<IProductService, ProductService>();
+
+builder.Services.AddValidatorsFromAssemblyContaining<CreateProductDtoValidator>();
 
 var app = builder.Build();
 
@@ -150,6 +170,7 @@ app.MapControllers();
     var context = scope.ServiceProvider.GetRequiredService<HuellarioDbContext>();
     await DataSeeder.SeedCategoriesAsync(context);
     await DataSeeder.SeedBrandsAsync(context);
+    await DataSeeder.SeedProductsAsync(context);
 }*/
 
 app.Run();

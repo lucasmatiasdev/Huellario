@@ -18,9 +18,13 @@ public class HuellarioDbContext : IdentityDbContext<HuellarioIdentityUser>
         builder.ApplyConfiguration(new CategoryConfiguration());
         builder.ApplyConfiguration(new BrandConfiguration());
         builder.ApplyConfiguration(new UserConfiguration());
+        builder.ApplyConfiguration(new ProductConfiguration());
+        builder.ApplyConfiguration(new ProductImageConfiguration());
+        builder.ApplyConfiguration(new VariantConfiguration());
     }
 
     public DbSet<Category> Categories => Set<Category>();
     public DbSet<Brand> Brands => Set<Brand>();
     public new DbSet<User> Users => Set<User>();
+    public DbSet<Product> Products => Set<Product>();
 }

@@ -1,5 +1,6 @@
 using application.interfaces;
 using domain.dtos.Category;
+using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 
 namespace server.controllers;
@@ -9,10 +10,17 @@ namespace server.controllers;
 public class CategoryController : ControllerBase
 {
     private readonly ICategoryService _categoryService;
+    private readonly IValidator<CreateCategoryDto> _createValidator;
+    private readonly IValidator<UpdateCategoryDto> _updateValidator;
 
-    public CategoryController(ICategoryService categoryService)
+    public CategoryController(
+        ICategoryService categoryService,
+        IValidator<CreateCategoryDto> createValidator,
+        IValidator<UpdateCategoryDto> updateValidator)
     {
         _categoryService = categoryService;
+        _createValidator = createValidator;
+        _updateValidator = updateValidator;
     }
 
     [HttpGet]
@@ -39,6 +47,10 @@ public class CategoryController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<CategoryDto>> Create(CreateCategoryDto dto)
     {
+        var validation = await _createValidator.ValidateAsync(dto);
+        if (!validation.IsValid)
+            return BadRequest(validation.Errors);
+
         var category = await _categoryService.AddAsync(dto);
         return CreatedAtAction(nameof(GetBySlug), new { slug = category.Slug }, category);
     }
@@ -46,6 +58,10 @@ public class CategoryController : ControllerBase
     [HttpPut("{id}")]
     public async Task<ActionResult> Update(int id, UpdateCategoryDto dto)
     {
+        var validation = await _updateValidator.ValidateAsync(dto);
+        if (!validation.IsValid)
+            return BadRequest(validation.Errors);
+
         try
         {
             await _categoryService.UpdateAsync(id, dto);
