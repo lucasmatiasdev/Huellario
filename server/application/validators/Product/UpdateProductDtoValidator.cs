@@ -26,5 +26,11 @@ public class UpdateProductDtoValidator : AbstractValidator<UpdateProductDto>
 
         RuleFor(x => x.BrandId)
             .GreaterThan(0);
+
+        RuleFor(x => x.IsOwnBrand)
+            .NotNull();
+
+        RuleFor(x => x.IsActive)
+            .NotNull();
     }
 }
