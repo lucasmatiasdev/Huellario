@@ -57,6 +57,10 @@ public class BrandService : IBrandService
 
     public async Task DeleteAsync(int id)
     {
+        var brand = await _unitOfWork.Brands.GetByIdAsync(id);
+        if (brand == null)
+            throw new KeyNotFoundException("Marca no encontrada");
+
         await _unitOfWork.Brands.DeleteAsync(id);
         await _unitOfWork.SaveChangesAsync();
     }

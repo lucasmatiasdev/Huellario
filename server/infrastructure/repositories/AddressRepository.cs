@@ -43,9 +43,10 @@ public class AddressRepository : IAddressRepository
         await _context.Addresses.AddAsync(address);
     }
 
-    public async Task UpdateAsync(Address address)
+    public Task UpdateAsync(Address address)
     {
         _context.Addresses.Update(address);
+        return Task.CompletedTask;
     }
 
     public async Task DeleteAsync(int id)

@@ -8,24 +8,22 @@ namespace application.implementations;
 
 public class AddressService : IAddressService
 {
-    private readonly IAddressRepository _addressRepository;
     private readonly IUnitOfWork _unitOfWork;
 
-    public AddressService(IAddressRepository addressRepository, IUnitOfWork unitOfWork)
+    public AddressService(IUnitOfWork unitOfWork)
     {
-        _addressRepository = addressRepository;
         _unitOfWork = unitOfWork;
     }
 
     public async Task<IEnumerable<AddressDto>> GetByUserIdAsync(int userId)
     {
-        var addresses = await _addressRepository.GetByUserIdAsync(userId);
+        var addresses = await _unitOfWork.Addresses.GetByUserIdAsync(userId);
         return addresses.Adapt<IEnumerable<AddressDto>>();
     }
 
     public async Task<AddressDto> GetByIdAsync(int userId, int id)
     {
-        var address = await _addressRepository.GetByIdAsync(id);
+        var address = await _unitOfWork.Addresses.GetByIdAsync(id);
         if (address == null || address.UserId != userId)
             throw new KeyNotFoundException("Dirección no encontrada");
         return address.Adapt<AddressDto>();
@@ -33,77 +31,107 @@ public class AddressService : IAddressService
 
     public async Task<AddressDto> AddAsync(int userId, CreateAddressDto dto)
     {
-        var count = await _addressRepository.GetCountByUserIdAsync(userId);
+        var count = await _unitOfWork.Addresses.GetCountByUserIdAsync(userId);
         if (count >= 5)
             throw new InvalidOperationException("No se pueden tener más de 5 direcciones guardadas");
 
         var address = dto.Adapt<Address>();
         address.UserId = userId;
 
-        if (address.IsDefault)
+        await _unitOfWork.BeginTransactionAsync();
+        try
         {
-            var currentDefault = await _addressRepository.GetDefaultByUserIdAsync(userId);
-            if (currentDefault != null)
+            if (address.IsDefault)
             {
-                currentDefault.IsDefault = false;
-                await _addressRepository.UpdateAsync(currentDefault);
+                var currentDefault = await _unitOfWork.Addresses.GetDefaultByUserIdAsync(userId);
+                if (currentDefault != null)
+                {
+                    currentDefault.IsDefault = false;
+                    await _unitOfWork.Addresses.UpdateAsync(currentDefault);
+                }
             }
-        }
 
-        await _addressRepository.AddAsync(address);
-        await _unitOfWork.SaveChangesAsync();
-        return address.Adapt<AddressDto>();
+            await _unitOfWork.Addresses.AddAsync(address);
+            await _unitOfWork.SaveChangesAsync();
+            await _unitOfWork.CommitTransactionAsync();
+            return address.Adapt<AddressDto>();
+        }
+        catch
+        {
+            await _unitOfWork.RollbackTransactionAsync();
+            throw;
+        }
     }
 
     public async Task UpdateAsync(int userId, int id, UpdateAddressDto dto)
     {
-        var address = await _addressRepository.GetByIdAsync(id);
+        var address = await _unitOfWork.Addresses.GetByIdAsync(id);
         if (address == null || address.UserId != userId)
             throw new KeyNotFoundException("Dirección no encontrada");
 
         var wasDefault = address.IsDefault;
         dto.Adapt(address);
 
-        if (address.IsDefault && !wasDefault)
+        await _unitOfWork.BeginTransactionAsync();
+        try
         {
-            var currentDefault = await _addressRepository.GetDefaultByUserIdAsync(userId);
-            if (currentDefault != null && currentDefault.Id != id)
+            if (address.IsDefault && !wasDefault)
             {
-                currentDefault.IsDefault = false;
-                await _addressRepository.UpdateAsync(currentDefault);
+                var currentDefault = await _unitOfWork.Addresses.GetDefaultByUserIdAsync(userId);
+                if (currentDefault != null && currentDefault.Id != id)
+                {
+                    currentDefault.IsDefault = false;
+                    await _unitOfWork.Addresses.UpdateAsync(currentDefault);
+                }
             }
-        }
 
-        await _addressRepository.UpdateAsync(address);
-        await _unitOfWork.SaveChangesAsync();
+            await _unitOfWork.Addresses.UpdateAsync(address);
+            await _unitOfWork.SaveChangesAsync();
+            await _unitOfWork.CommitTransactionAsync();
+        }
+        catch
+        {
+            await _unitOfWork.RollbackTransactionAsync();
+            throw;
+        }
     }
 
     public async Task DeleteAsync(int userId, int id)
     {
-        var address = await _addressRepository.GetByIdAsync(id);
+        var address = await _unitOfWork.Addresses.GetByIdAsync(id);
         if (address == null || address.UserId != userId)
             throw new KeyNotFoundException("Dirección no encontrada");
 
-        await _addressRepository.DeleteAsync(id);
+        await _unitOfWork.Addresses.DeleteAsync(id);
         await _unitOfWork.SaveChangesAsync();
     }
 
     public async Task<AddressDto> SetDefaultAsync(int userId, int id)
     {
-        var address = await _addressRepository.GetByIdAsync(id);
+        var address = await _unitOfWork.Addresses.GetByIdAsync(id);
         if (address == null || address.UserId != userId)
             throw new KeyNotFoundException("Dirección no encontrada");
 
-        var currentDefault = await _addressRepository.GetDefaultByUserIdAsync(userId);
-        if (currentDefault != null && currentDefault.Id != id)
+        await _unitOfWork.BeginTransactionAsync();
+        try
         {
-            currentDefault.IsDefault = false;
-            await _addressRepository.UpdateAsync(currentDefault);
-        }
+            var currentDefault = await _unitOfWork.Addresses.GetDefaultByUserIdAsync(userId);
+            if (currentDefault != null && currentDefault.Id != id)
+            {
+                currentDefault.IsDefault = false;
+                await _unitOfWork.Addresses.UpdateAsync(currentDefault);
+            }
 
-        address.IsDefault = true;
-        await _addressRepository.UpdateAsync(address);
-        await _unitOfWork.SaveChangesAsync();
-        return address.Adapt<AddressDto>();
+            address.IsDefault = true;
+            await _unitOfWork.Addresses.UpdateAsync(address);
+            await _unitOfWork.SaveChangesAsync();
+            await _unitOfWork.CommitTransactionAsync();
+            return address.Adapt<AddressDto>();
+        }
+        catch
+        {
+            await _unitOfWork.RollbackTransactionAsync();
+            throw;
+        }
     }
 }

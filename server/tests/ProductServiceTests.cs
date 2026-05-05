@@ -68,21 +68,6 @@ public class ProductServiceTests
     }
 
     [Fact]
-    public async Task GetAllAsync_ShouldReturnAllProducts()
-    {
-        var products = new List<Product>
-        {
-            new() { Id = 1, Name = "Producto 1", Slug = "producto-1" },
-            new() { Id = 2, Name = "Producto 2", Slug = "producto-2" }
-        };
-        _repositoryMock.Setup(r => r.GetAllAsync()).ReturnsAsync(products);
-
-        var result = await _sut.GetAllAsync();
-
-        result.Count().ShouldBe(2);
-    }
-
-    [Fact]
     public async Task GetPagedAsync_ShouldReturnPagedResult()
     {
         var products = new List<Product> { new() { Id = 1, Name = "Producto 1", Slug = "producto-1" } };

@@ -87,34 +87,44 @@ public class CartService : ICartService
         if (!anonymousItems.Any())
             return await GetCartAsync(userId, string.Empty);
 
-        var userItems = await _cartRepository.GetItemsAsync(userId, string.Empty);
-
-        foreach (var anonItem in anonymousItems)
+        await _unitOfWork.BeginTransactionAsync();
+        try
         {
-            var existing = userItems.FirstOrDefault(i =>
-                i.ProductId == anonItem.ProductId && i.VariantId == anonItem.VariantId);
+            var userItems = await _cartRepository.GetItemsAsync(userId, string.Empty);
 
-            if (existing != null)
+            foreach (var anonItem in anonymousItems)
             {
-                existing.Quantity += anonItem.Quantity;
-                await _cartRepository.UpdateQuantityAsync(existing);
-            }
-            else
-            {
-                var newItem = new CartItem
+                var existing = userItems.FirstOrDefault(i =>
+                    i.ProductId == anonItem.ProductId && i.VariantId == anonItem.VariantId);
+
+                if (existing != null)
                 {
-                    UserId = userId,
-                    SessionId = string.Empty,
-                    ProductId = anonItem.ProductId,
-                    VariantId = anonItem.VariantId,
-                    Quantity = anonItem.Quantity
-                };
-                await _cartRepository.AddItemAsync(newItem);
+                    existing.Quantity += anonItem.Quantity;
+                    await _cartRepository.UpdateQuantityAsync(existing);
+                }
+                else
+                {
+                    var newItem = new CartItem
+                    {
+                        UserId = userId,
+                        SessionId = string.Empty,
+                        ProductId = anonItem.ProductId,
+                        VariantId = anonItem.VariantId,
+                        Quantity = anonItem.Quantity
+                    };
+                    await _cartRepository.AddItemAsync(newItem);
+                }
             }
-        }
 
-        await _cartRepository.ClearCartAsync(0, sessionId);
-        await _unitOfWork.SaveChangesAsync();
-        return await GetCartAsync(userId, string.Empty);
+            await _cartRepository.ClearCartAsync(0, sessionId);
+            await _unitOfWork.SaveChangesAsync();
+            await _unitOfWork.CommitTransactionAsync();
+            return await GetCartAsync(userId, string.Empty);
+        }
+        catch
+        {
+            await _unitOfWork.RollbackTransactionAsync();
+            throw;
+        }
     }
 }

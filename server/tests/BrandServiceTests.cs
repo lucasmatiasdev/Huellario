@@ -117,7 +117,7 @@ public class BrandServiceTests
     {
         _repositoryMock.Setup(r => r.GetByIdAsync(It.IsAny<int>())).ReturnsAsync((Brand?)null);
 
-        var act = () => _sut.UpdateAsync(999, new UpdateBrandDto());
+        var act = () => _sut.UpdateAsync(999, new UpdateBrandDto { Name = "x", Slug = "x" });
 
         await act.ShouldThrowAsync<KeyNotFoundException>();
     }

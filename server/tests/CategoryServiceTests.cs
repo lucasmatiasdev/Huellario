@@ -117,7 +117,7 @@ public class CategoryServiceTests
     {
         _repositoryMock.Setup(r => r.GetByIdAsync(It.IsAny<int>())).ReturnsAsync((Category?)null);
 
-        var act = () => _sut.UpdateAsync(999, new UpdateCategoryDto());
+        var act = () => _sut.UpdateAsync(999, new UpdateCategoryDto { Name = "x", Slug = "x" });
 
         await act.ShouldThrowAsync<KeyNotFoundException>();
     }

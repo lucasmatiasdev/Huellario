@@ -28,9 +28,10 @@ public class CategoryRepository : ICategoryRepository
     {
         await _context.Categories.AddAsync(category);
     }
-    public async Task UpdateAsync(Category category)
+    public Task UpdateAsync(Category category)
     {
         _context.Categories.Update(category);
+        return Task.CompletedTask;
     }
     public async Task DeleteAsync(int id)
     {

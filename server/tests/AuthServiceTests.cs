@@ -74,7 +74,7 @@ public class AuthServiceTests
         result.Name.ShouldBe("Juan Pérez");
 
         _userRepositoryMock.Verify(r => r.AddAsync(It.IsAny<User>()), Times.Once);
-        _unitOfWorkMock.Verify(u => u.SaveChangesAsync(default), Times.Exactly(2));
+        _unitOfWorkMock.Verify(u => u.SaveChangesAsync(default), Times.Once);
         _userManagerMock.Verify(um => um.CreateAsync(It.IsAny<HuellarioIdentityUser>(), dto.Password), Times.Once);
     }
 

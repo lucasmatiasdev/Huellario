@@ -30,30 +30,35 @@ public class AuthService : IAuthService
 
     public async Task<TokenResponseDto> RegisterAsync(RegisterDto registerDto)
     {
-        var user = registerDto.Adapt<User>();
-
-        await _unitOfWork.Users.AddAsync(user);
-        await _unitOfWork.SaveChangesAsync();
-
-        var identityUser = new HuellarioIdentityUser
+        await _unitOfWork.BeginTransactionAsync();
+        try
         {
-            UserName = registerDto.Email,
-            Email = registerDto.Email,
-            UserId = user.Id
-        };
+            var identityUser = new HuellarioIdentityUser
+            {
+                UserName = registerDto.Email,
+                Email = registerDto.Email
+            };
 
-        var result = await _userManager.CreateAsync(identityUser, registerDto.Password);
+            var result = await _userManager.CreateAsync(identityUser, registerDto.Password);
+            if (!result.Succeeded)
+            {
+                var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+                throw new InvalidOperationException($"Error al crear usuario: {errors}");
+            }
 
-        if (!result.Succeeded)
-        {
-            var errors = string.Join(", ", result.Errors.Select(e => e.Description));
-            throw new InvalidOperationException($"Error al crear usuario: {errors}");
+            var user = registerDto.Adapt<User>();
+            user.IdentityId = identityUser.Id;
+            await _unitOfWork.Users.AddAsync(user);
+            await _unitOfWork.SaveChangesAsync();
+
+            await _unitOfWork.CommitTransactionAsync();
+            return GenerateTokenResponse(identityUser, user);
         }
-
-        user.IdentityId = identityUser.Id;
-        await _unitOfWork.SaveChangesAsync();
-
-        return GenerateTokenResponse(identityUser, user);
+        catch
+        {
+            await _unitOfWork.RollbackTransactionAsync();
+            throw;
+        }
     }
 
     public async Task<TokenResponseDto> LoginAsync(LoginDto loginDto)

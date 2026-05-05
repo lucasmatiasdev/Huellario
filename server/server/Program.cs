@@ -5,6 +5,7 @@ using domain.dtos.Brand;
 using domain.dtos.Category;
 using domain.dtos.CartItem;
 using domain.dtos.Product;
+using domain.dtos.Address;
 using domain.entities;
 using domain.interfaces;
 using infrastructure.data;
@@ -29,10 +30,12 @@ DotNetEnv.Env.TraversePath().Load();
 // Mapster config
 TypeAdapterConfig<Category, CategoryDto>.NewConfig();
 TypeAdapterConfig<CreateCategoryDto, Category>.NewConfig();
-TypeAdapterConfig<UpdateCategoryDto, Category>.NewConfig();
+TypeAdapterConfig<UpdateCategoryDto, Category>.NewConfig()
+    .IgnoreNullValues(true);
 TypeAdapterConfig<Brand, BrandDto>.NewConfig();
 TypeAdapterConfig<CreateBrandDto, Brand>.NewConfig();
-TypeAdapterConfig<UpdateBrandDto, Brand>.NewConfig();
+TypeAdapterConfig<UpdateBrandDto, Brand>.NewConfig()
+    .IgnoreNullValues(true);
 TypeAdapterConfig<Product, ProductDto>.NewConfig()
     .Map(dest => dest.Images, src => src.Images)
     .Map(dest => dest.Variants, src => src.Variants);
@@ -57,9 +60,12 @@ TypeAdapterConfig<CartItem, CartItemDto>.NewConfig()
     .Map(dest => dest.UnitPrice, src =>
         src.Variant != null ? src.Variant.Price
         : src.Product != null ? src.Product.Price
-        : 0);
+        : 0)
+    .Map(dest => dest.CartItemId, src => $"{src.ProductId}-{src.VariantId}");
 TypeAdapterConfig<CreateCartItemDto, CartItem>.NewConfig();
 TypeAdapterConfig<UpdateCartItemDto, CartItem>.NewConfig();
+TypeAdapterConfig<UpdateAddressDto, Address>.NewConfig()
+    .IgnoreNullValues(true);
 
 
 var builder = WebApplication.CreateBuilder(args);

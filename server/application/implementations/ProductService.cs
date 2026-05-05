@@ -32,12 +32,6 @@ public class ProductService : IProductService
         return product.Adapt<ProductDto>();
     }
 
-    public async Task<IEnumerable<ProductListDto>> GetAllAsync()
-    {
-        var products = await _unitOfWork.Products.GetAllAsync();
-        return products.Adapt<IEnumerable<ProductListDto>>();
-    }
-
     public async Task<PagedResult<ProductListDto>> GetPagedAsync(
         int page, int pageSize,
         int? categoryId, int? brandId,
@@ -76,6 +70,10 @@ public class ProductService : IProductService
 
     public async Task DeleteAsync(int id)
     {
+        var product = await _unitOfWork.Products.GetByIdAsync(id);
+        if (product == null)
+            throw new KeyNotFoundException("Producto no encontrado");
+
         await _unitOfWork.Products.DeleteAsync(id);
         await _unitOfWork.SaveChangesAsync();
     }

@@ -35,19 +35,16 @@ public class CartRepository : ICartRepository
         await _context.CartItems.AddAsync(item);
     }
 
-    public async Task RemoveItemAsync(CartItem item)
+    public Task RemoveItemAsync(CartItem item)
     {
-        var existing = await _context.CartItems
-            .FindAsync(item.UserId, item.SessionId, item.ProductId, item.VariantId);
-        if (existing != null)
-        {
-            _context.CartItems.Remove(existing);
-        }
+        _context.CartItems.Remove(item);
+        return Task.CompletedTask;
     }
 
-    public async Task UpdateQuantityAsync(CartItem item)
+    public Task UpdateQuantityAsync(CartItem item)
     {
         _context.CartItems.Update(item);
+        return Task.CompletedTask;
     }
 
     public async Task ClearCartAsync(int userId, string sessionId)

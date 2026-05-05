@@ -10,6 +10,6 @@ public class UpdateAddressDto{
     public string? Province { get; set; }
     public required string ZipCode { get; set; }
     public string? Reference { get; set; }
-    public bool IsDefault { get; set; }
-    public AddressType Type { get; set; }
+    public bool? IsDefault { get; set; }
+    public AddressType? Type { get; set; }
 }

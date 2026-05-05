@@ -50,6 +50,10 @@ public class CategoryService : ICategoryService
     }
     public async Task DeleteAsync(int id)
     {
+        var category = await _unitOfWork.Categories.GetByIdAsync(id);
+        if (category == null)
+            throw new KeyNotFoundException("Categoría no encontrada");
+        
         await _unitOfWork.Categories.DeleteAsync(id);
         await _unitOfWork.SaveChangesAsync();
     }

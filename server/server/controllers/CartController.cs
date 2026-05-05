@@ -37,12 +37,15 @@ public class CartController : ControllerBase
 
     [AllowAnonymous]
     [HttpPost("items")]
-    public async Task<ActionResult<CartDto>> AddItem(CreateCartItemDto dto)
+    public async Task<ActionResult<CartDto>> AddItem(
+        CreateCartItemDto dto,
+        [FromQuery] string? sessionId)
     {
         var validation = await _createValidator.ValidateAsync(dto);
         if (!validation.IsValid)
             return BadRequest(validation.Errors);
 
+        dto.SessionId ??= sessionId;
         var userId = GetUserId();
         var cart = await _cartService.AddItemAsync(userId, dto);
         return Ok(cart);
@@ -62,9 +65,11 @@ public class CartController : ControllerBase
     }
 
     [AllowAnonymous]
-    [HttpDelete("items/{productId}/{variantId}")]
+    [HttpDelete("items")]
     public async Task<ActionResult<CartDto>> RemoveItem(
-        int productId, int variantId, [FromQuery] string? sessionId)
+        [FromQuery] int productId,
+        [FromQuery] int variantId,
+        [FromQuery] string? sessionId)
     {
         var userId = GetUserId();
         var sid = ResolveSessionId(userId, sessionId);

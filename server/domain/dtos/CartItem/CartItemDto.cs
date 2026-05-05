@@ -2,6 +2,7 @@ namespace domain.dtos.CartItem;
 
 public class CartItemDto
 {
+    public string CartItemId { get; set; } = string.Empty;
     public int ProductId { get; set; }
     public required string ProductName { get; set; }
     public required string ProductSlug { get; set; }

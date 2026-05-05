@@ -2,9 +2,9 @@ namespace domain.dtos.Category;
 
 public class UpdateCategoryDto
 {
-    public string? Name { get; set; }
-    public string? Slug { get; set; }
+    public required string Name { get; set; }
+    public required string Slug { get; set; }
     public string? Description { get; set; }
     public string? ImagenUrl { get; set; }
-    public bool IsActive { get; set; }   
+    public bool? IsActive { get; set; }   
 }

@@ -29,14 +29,6 @@ public class ProductRepository : IProductRepository
             .FirstOrDefaultAsync(p => p.Slug == slug);
     }
 
-    public async Task<IEnumerable<Product>> GetAllAsync()
-    {
-        return await _context.Products
-            .Include(p => p.Images)
-            .Include(p => p.Variants)
-            .ToListAsync();
-    }
-
     public async Task<(IEnumerable<Product> Items, int TotalCount)> GetPagedAsync(
         int page, int pageSize,
         int? categoryId, int? brandId,
@@ -80,9 +72,10 @@ public class ProductRepository : IProductRepository
         await _context.Products.AddAsync(product);
     }
 
-    public async Task UpdateAsync(Product product)
+    public Task UpdateAsync(Product product)
     {
         _context.Products.Update(product);
+        return Task.CompletedTask;
     }
 
     public async Task DeleteAsync(int id)

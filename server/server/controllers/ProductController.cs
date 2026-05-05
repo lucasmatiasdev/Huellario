@@ -32,26 +32,19 @@ public class ProductController : ControllerBase
 
     [HttpGet]
     public async Task<ActionResult> GetAll(
-        [FromQuery] int page = 0,
-        [FromQuery] int pageSize = 0,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20,
         [FromQuery] int? categoryId = null,
         [FromQuery] int? brandId = null,
         [FromQuery] string? search = null,
         [FromQuery] decimal? minPrice = null,
         [FromQuery] decimal? maxPrice = null)
     {
-        if (page > 0 || pageSize > 0 || categoryId is not null || brandId is not null
-            || search is not null || minPrice is not null || maxPrice is not null)
-        {
-            var paged = await _productService.GetPagedAsync(
-                page > 0 ? page : 1,
-                pageSize > 0 ? pageSize : 10,
-                categoryId, brandId, search, minPrice, maxPrice);
-            return Ok(paged);
-        }
-
-        var all = await _productService.GetAllAsync();
-        return Ok(all);
+        var paged = await _productService.GetPagedAsync(
+            page > 0 ? page : 1,
+            pageSize > 0 ? pageSize : 10,
+            categoryId, brandId, search, minPrice, maxPrice);
+        return Ok(paged);
     }
 
     [HttpGet("{slug}")]

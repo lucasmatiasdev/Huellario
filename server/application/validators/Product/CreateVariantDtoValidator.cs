@@ -11,8 +11,13 @@ public class CreateVariantDtoValidator : AbstractValidator<CreateVariantDto>
             .NotEmpty()
             .MaximumLength(200);
 
+        RuleFor(x => x.Sku)
+            .MaximumLength(50)
+            .When(x => x.Sku is not null);
+
         RuleFor(x => x.Price)
-            .GreaterThan(0);
+            .GreaterThan(0)
+            .When(x => x.Price.HasValue);
 
         RuleFor(x => x.Stock)
             .GreaterThanOrEqualTo(0);

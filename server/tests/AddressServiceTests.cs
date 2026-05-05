@@ -19,7 +19,8 @@ public class AddressServiceTests
         _repositoryMock = new Mock<IAddressRepository>();
         _repositoryMock.Setup(r => r.UpdateAsync(It.IsAny<Address>())).Returns(Task.CompletedTask);
         _unitOfWorkMock = new Mock<IUnitOfWork>();
-        _sut = new AddressService(_repositoryMock.Object, _unitOfWorkMock.Object);
+        _unitOfWorkMock.Setup(u => u.Addresses).Returns(_repositoryMock.Object);
+        _sut = new AddressService(_unitOfWorkMock.Object);
     }
 
     [Fact]

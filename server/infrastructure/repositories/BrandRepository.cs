@@ -34,9 +34,10 @@ public class BrandRepository : IBrandRepository
         await _context.Brands.AddAsync(brand);
     }
 
-    public async Task UpdateAsync(Brand brand)
+    public Task UpdateAsync(Brand brand)
     {
         _context.Brands.Update(brand);
+        return Task.CompletedTask;
     }
 
     public async Task DeleteAsync(int id)

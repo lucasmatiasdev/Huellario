@@ -7,7 +7,6 @@ public interface IProductService
 {
     Task<ProductDto> GetByIdAsync(int id);
     Task<ProductDto> GetBySlugAsync(string slug);
-    Task<IEnumerable<ProductListDto>> GetAllAsync();
     Task<PagedResult<ProductListDto>> GetPagedAsync(int page, int pageSize, int? categoryId, int? brandId, string? search, decimal? minPrice, decimal? maxPrice);
     Task<ProductDto> AddAsync(CreateProductDto dto);
     Task UpdateAsync(int id, UpdateProductDto dto);
