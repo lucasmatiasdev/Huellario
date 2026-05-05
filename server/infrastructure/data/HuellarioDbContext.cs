@@ -22,6 +22,7 @@ public class HuellarioDbContext : IdentityDbContext<HuellarioIdentityUser>
         builder.ApplyConfiguration(new ProductImageConfiguration());
         builder.ApplyConfiguration(new VariantConfiguration());
         builder.ApplyConfiguration(new AddressConfiguration());
+        builder.ApplyConfiguration(new CartItemConfiguration());
     }
 
     public DbSet<Category> Categories => Set<Category>();
@@ -29,4 +30,5 @@ public class HuellarioDbContext : IdentityDbContext<HuellarioIdentityUser>
     public new DbSet<User> Users => Set<User>();
     public DbSet<Product> Products => Set<Product>();
     public DbSet<Address> Addresses => Set<Address>();   
+    public DbSet<CartItem> CartItems => Set<CartItem>();
 }

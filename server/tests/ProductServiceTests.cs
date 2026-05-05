@@ -100,7 +100,7 @@ public class ProductServiceTests
     [Fact]
     public async Task AddAsync_ShouldCreateProductAndReturnDto()
     {
-        var dto = new CreateProductDto { Name = "Producto Nuevo", Slug = "producto-nuevo", Price = 100, CategoryId = 1, BrandId = 1 };
+        var dto = new CreateProductDto { Name = "Producto Nuevo", Slug = "producto-nuevo", Description = "Desc", Price = 100, CategoryId = 1, BrandId = 1 };
         Product? captured = null;
         _repositoryMock.Setup(r => r.AddAsync(It.IsAny<Product>()))
             .Callback<Product>(p => captured = p);
@@ -116,7 +116,7 @@ public class ProductServiceTests
     public async Task UpdateAsync_ShouldUpdateExistingProduct()
     {
         var existing = new Product { Id = 1, Name = "Original", Slug = "original", Price = 50 };
-        var dto = new UpdateProductDto { Name = "Actualizado", Slug = "actualizado", Price = 100 };
+        var dto = new UpdateProductDto { Name = "Actualizado", Slug = "actualizado", Description = "Desc", Price = 100, IsOwnBrand = false, IsActive = true };
         _repositoryMock.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(existing);
 
         await _sut.UpdateAsync(1, dto);
@@ -133,7 +133,7 @@ public class ProductServiceTests
     {
         _repositoryMock.Setup(r => r.GetByIdAsync(It.IsAny<int>())).ReturnsAsync((Product?)null);
 
-        var act = () => _sut.UpdateAsync(999, new UpdateProductDto());
+        var act = () => _sut.UpdateAsync(999, new UpdateProductDto { Name = "x", Slug = "x", Description = "x", IsOwnBrand = false, IsActive = true });
 
         await act.ShouldThrowAsync<KeyNotFoundException>();
     }
@@ -168,7 +168,7 @@ public class ProductServiceTests
     {
         _repositoryMock.Setup(r => r.GetByIdAsync(It.IsAny<int>())).ReturnsAsync((Product?)null);
 
-        var act = () => _sut.AddImageAsync(999, new ProductImageDto());
+        var act = () => _sut.AddImageAsync(999, new ProductImageDto { Url = "/x.jpg" });
 
         await act.ShouldThrowAsync<KeyNotFoundException>();
     }
@@ -227,7 +227,7 @@ public class ProductServiceTests
     {
         _repositoryMock.Setup(r => r.GetByIdAsync(It.IsAny<int>())).ReturnsAsync((Product?)null);
 
-        var act = () => _sut.AddVariantAsync(999, new CreateVariantDto());
+        var act = () => _sut.AddVariantAsync(999, new CreateVariantDto { Name = "x" });
 
         await act.ShouldThrowAsync<KeyNotFoundException>();
     }
@@ -253,7 +253,7 @@ public class ProductServiceTests
     {
         _repositoryMock.Setup(r => r.GetByIdAsync(It.IsAny<int>())).ReturnsAsync((Product?)null);
 
-        var act = () => _sut.UpdateVariantAsync(999, 1, new CreateVariantDto());
+        var act = () => _sut.UpdateVariantAsync(999, 1, new CreateVariantDto { Name = "x" });
 
         await act.ShouldThrowAsync<KeyNotFoundException>();
     }
@@ -264,7 +264,7 @@ public class ProductServiceTests
         var product = new Product { Id = 1, Variants = new List<Variant>() };
         _repositoryMock.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(product);
 
-        var act = () => _sut.UpdateVariantAsync(1, 999, new CreateVariantDto());
+        var act = () => _sut.UpdateVariantAsync(1, 999, new CreateVariantDto { Name = "x" });
 
         await act.ShouldThrowAsync<KeyNotFoundException>();
     }

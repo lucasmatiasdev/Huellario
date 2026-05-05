@@ -6,5 +6,6 @@ public interface IUnitOfWork
     IBrandRepository Brands { get; }
     IUserRepository Users { get; }
     IProductRepository Products { get; }
+    ICartRepository CartItems { get; }
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

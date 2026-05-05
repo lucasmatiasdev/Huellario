@@ -23,7 +23,7 @@ public class AuthServiceTests
     {
         _userStoreMock = new Mock<IUserStore<HuellarioIdentityUser>>();
         _userManagerMock = new Mock<UserManager<HuellarioIdentityUser>>(
-            _userStoreMock.Object, null, null, null, null, null, null, null, null
+            _userStoreMock.Object, null!, null!, null!, null!, null!, null!, null!, null!
         );
 
         _userRepositoryMock = new Mock<IUserRepository>();
@@ -31,7 +31,7 @@ public class AuthServiceTests
         _unitOfWorkMock.Setup(u => u.Users).Returns(_userRepositoryMock.Object);
 
         //Estos no son mis credenciales posta
-        var configData = new Dictionary<string, string>
+        var configData = new Dictionary<string, string?>
         {
             { "Jwt:Key", "supersecretkeythatshouldbelongenoughforhmac256" },
             { "Jwt:Issuer", "Huellario" },

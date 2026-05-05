@@ -3,6 +3,7 @@ using application.implementations;
 using application.interfaces;
 using domain.dtos.Brand;
 using domain.dtos.Category;
+using domain.dtos.CartItem;
 using domain.dtos.Product;
 using domain.entities;
 using domain.interfaces;
@@ -44,6 +45,21 @@ TypeAdapterConfig<UpdateProductDto, Product>.NewConfig();
 TypeAdapterConfig<Variant, VariantDto>.NewConfig();
 TypeAdapterConfig<CreateVariantDto, Variant>.NewConfig();
 TypeAdapterConfig<ProductImage, ProductImageDto>.NewConfig();
+TypeAdapterConfig<CartItem, CartItemDto>.NewConfig()
+    .Map(dest => dest.ProductName, src => src.Product != null ? src.Product.Name : string.Empty)
+    .Map(dest => dest.ProductSlug, src => src.Product != null ? src.Product.Slug : string.Empty)
+    .Map(dest => dest.ProductImageUrl, src =>
+        src.Product != null
+            ? src.Product.Images.Where(i => i.IsMain).Select(i => i.Url).FirstOrDefault()
+              ?? src.Product.Images.Select(i => i.Url).FirstOrDefault()
+            : null)
+    .Map(dest => dest.VariantName, src => src.Variant != null ? src.Variant.Name : string.Empty)
+    .Map(dest => dest.UnitPrice, src =>
+        src.Variant != null ? src.Variant.Price
+        : src.Product != null ? src.Product.Price
+        : 0);
+TypeAdapterConfig<CreateCartItemDto, CartItem>.NewConfig();
+TypeAdapterConfig<UpdateCartItemDto, CartItem>.NewConfig();
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -148,6 +164,8 @@ builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<IAddressRepository, AddressRepository>();
 builder.Services.AddScoped<IAddressService, AddressService>();
+builder.Services.AddScoped<ICartRepository, CartRepository>();
+builder.Services.AddScoped<ICartService, CartService>();
 
 builder.Services.AddValidatorsFromAssemblyContaining<CreateProductDtoValidator>();
 

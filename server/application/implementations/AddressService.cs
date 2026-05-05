@@ -44,7 +44,10 @@ public class AddressService : IAddressService
         {
             var currentDefault = await _addressRepository.GetDefaultByUserIdAsync(userId);
             if (currentDefault != null)
+            {
                 currentDefault.IsDefault = false;
+                await _addressRepository.UpdateAsync(currentDefault);
+            }
         }
 
         await _addressRepository.AddAsync(address);
@@ -65,7 +68,10 @@ public class AddressService : IAddressService
         {
             var currentDefault = await _addressRepository.GetDefaultByUserIdAsync(userId);
             if (currentDefault != null && currentDefault.Id != id)
+            {
                 currentDefault.IsDefault = false;
+                await _addressRepository.UpdateAsync(currentDefault);
+            }
         }
 
         await _addressRepository.UpdateAsync(address);

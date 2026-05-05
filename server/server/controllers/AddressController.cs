@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using application.interfaces;
 using domain.dtos.Address;
+using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -12,10 +13,17 @@ namespace server.controllers;
 public class AddressController : ControllerBase
 {
     private readonly IAddressService _addressService;
+    private readonly IValidator<CreateAddressDto> _createValidator;
+    private readonly IValidator<UpdateAddressDto> _updateValidator;
 
-    public AddressController(IAddressService addressService)
+    public AddressController(
+        IAddressService addressService,
+        IValidator<CreateAddressDto> createValidator,
+        IValidator<UpdateAddressDto> updateValidator)
     {
         _addressService = addressService;
+        _createValidator = createValidator;
+        _updateValidator = updateValidator;
     }
 
     [HttpGet]
@@ -44,6 +52,10 @@ public class AddressController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<AddressDto>> Create(CreateAddressDto dto)
     {
+        var validation = await _createValidator.ValidateAsync(dto);
+        if (!validation.IsValid)
+            return BadRequest(validation.Errors);
+
         try
         {
             var userId = GetUserId();
@@ -59,6 +71,10 @@ public class AddressController : ControllerBase
     [HttpPut("{id}")]
     public async Task<ActionResult> Update(int id, UpdateAddressDto dto)
     {
+        var validation = await _updateValidator.ValidateAsync(dto);
+        if (!validation.IsValid)
+            return BadRequest(validation.Errors);
+
         try
         {
             var userId = GetUserId();
