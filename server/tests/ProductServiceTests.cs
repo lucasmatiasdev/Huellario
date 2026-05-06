@@ -126,6 +126,8 @@ public class ProductServiceTests
     [Fact]
     public async Task DeleteAsync_ShouldRemoveProduct()
     {
+        var product = new Product { Id = 1, Name = "Royal Canin", Slug = "royal-canin" };
+        _repositoryMock.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(product);
         _repositoryMock.Setup(r => r.DeleteAsync(1));
 
         await _sut.DeleteAsync(1);

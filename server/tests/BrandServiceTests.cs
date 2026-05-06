@@ -125,6 +125,8 @@ public class BrandServiceTests
     [Fact]
     public async Task DeleteAsync_ShouldRemoveBrand()
     {
+        var brand = new Brand { Id = 1, Name = "Royal Canin", Slug = "royal-canin" };
+        _repositoryMock.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(brand);
         _repositoryMock.Setup(r => r.DeleteAsync(1));
 
         await _sut.DeleteAsync(1);

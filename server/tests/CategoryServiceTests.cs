@@ -125,6 +125,8 @@ public class CategoryServiceTests
     [Fact]
     public async Task DeleteAsync_ShouldRemoveCategory()
     {
+        var category = new Category { Id = 1, Name = "Perros", Slug = "perros" };
+        _repositoryMock.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(category);
         _repositoryMock.Setup(r => r.DeleteAsync(1));
 
         await _sut.DeleteAsync(1);
