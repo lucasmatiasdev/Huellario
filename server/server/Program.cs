@@ -6,6 +6,7 @@ using domain.dtos.Category;
 using domain.dtos.CartItem;
 using domain.dtos.Product;
 using domain.dtos.Address;
+using domain.dtos.Order;
 using domain.entities;
 using domain.interfaces;
 using infrastructure.data;
@@ -66,6 +67,8 @@ TypeAdapterConfig<CreateCartItemDto, CartItem>.NewConfig();
 TypeAdapterConfig<UpdateCartItemDto, CartItem>.NewConfig();
 TypeAdapterConfig<UpdateAddressDto, Address>.NewConfig()
     .IgnoreNullValues(true);
+TypeAdapterConfig<Order, OrderListDto>.NewConfig();
+TypeAdapterConfig<OrderLine, OrderLineDto>.NewConfig();
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -172,6 +175,8 @@ builder.Services.AddScoped<IAddressRepository, AddressRepository>();
 builder.Services.AddScoped<IAddressService, AddressService>();
 builder.Services.AddScoped<ICartRepository, CartRepository>();
 builder.Services.AddScoped<ICartService, CartService>();
+builder.Services.AddScoped<IOrderRepository, OrderRepository>();
+builder.Services.AddScoped<IOrderService, OrderService>();
 
 builder.Services.AddValidatorsFromAssemblyContaining<CreateProductDtoValidator>();
 

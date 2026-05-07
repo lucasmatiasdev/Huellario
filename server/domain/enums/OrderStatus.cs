@@ -1,0 +1,11 @@
+namespace domain.enums;
+
+public enum OrderStatus
+{
+    Pending = 0,
+    Confirmed = 1,
+    Shipping = 2,
+    Delivered = 3,
+    Cancelled = 4,
+    Refunded = 5
+}

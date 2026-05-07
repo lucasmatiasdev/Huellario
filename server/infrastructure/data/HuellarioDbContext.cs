@@ -23,9 +23,12 @@ public class HuellarioDbContext : IdentityDbContext<HuellarioIdentityUser>
         builder.ApplyConfiguration(new VariantConfiguration());
         builder.ApplyConfiguration(new AddressConfiguration());
         builder.ApplyConfiguration(new CartItemConfiguration());
+        builder.ApplyConfiguration(new OrderConfiguration());
     }
 
     public DbSet<Category> Categories => Set<Category>();
+    public DbSet<Order> Orders => Set<Order>();
+    public DbSet<OrderLine> OrderLines => Set<OrderLine>();
     public DbSet<Brand> Brands => Set<Brand>();
     public new DbSet<User> Users => Set<User>();
     public DbSet<Product> Products => Set<Product>();
