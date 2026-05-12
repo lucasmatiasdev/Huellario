@@ -1,9 +1,9 @@
 using application.interfaces;
-using domain.dtos;
-using domain.dtos.Product;
+using application.dtos;
+using application.dtos.Product;
 using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
-
+using Microsoft.AspNetCore.Authorization;
 namespace server.controllers;
 
 [ApiController]
@@ -62,6 +62,7 @@ public class ProductController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = "admin")]
     public async Task<ActionResult<ProductDto>> Create(CreateProductDto dto)
     {
         var validation = await _createValidator.ValidateAsync(dto);
@@ -73,6 +74,7 @@ public class ProductController : ControllerBase
     }
 
     [HttpPut("{id}")]
+    [Authorize(Roles = "admin")]
     public async Task<ActionResult> Update(int id, UpdateProductDto dto)
     {
         var validation = await _updateValidator.ValidateAsync(dto);
@@ -91,19 +93,30 @@ public class ProductController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Roles = "admin")]
     public async Task<ActionResult> Delete(int id)
     {
-        await _productService.DeleteAsync(id);
-        return NoContent();
+        try
+        {
+            await _productService.DeleteAsync(id);
+            return NoContent();
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound();
+        }
+        
     }
 
     [HttpPost("{id}/images")]
+    [Authorize(Roles = "admin")]
     public async Task<ActionResult<ProductImageDto>> AddImage(int id, ProductImageDto dto)
     {
         try
         {
             var image = await _productService.AddImageAsync(id, dto);
-            return CreatedAtAction(nameof(GetBySlug), new { slug = "" }, image);
+            var product = await _productService.GetByIdAsync(id);
+            return CreatedAtAction(nameof(GetBySlug), new { slug = product.Slug }, image);
         }
         catch (KeyNotFoundException)
         {
@@ -112,6 +125,7 @@ public class ProductController : ControllerBase
     }
 
     [HttpDelete("{id}/images/{imageId}")]
+    [Authorize(Roles = "admin")]
     public async Task<ActionResult> DeleteImage(int id, int imageId)
     {
         try
@@ -125,7 +139,23 @@ public class ProductController : ControllerBase
         }
     }
 
+    [HttpPatch("{id}/images/{imageId}/main")]
+    [Authorize(Roles = "admin")]
+    public async Task<ActionResult> SetMainImage(int id, int imageId)
+    {
+        try
+        {
+            await _productService.SetMainImageAsync(id, imageId);
+            return NoContent();
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound();
+        }
+    }
+
     [HttpPost("{id}/variants")]
+    [Authorize(Roles = "admin")]
     public async Task<ActionResult<VariantDto>> AddVariant(int id, CreateVariantDto dto)
     {
         var validation = await _createVariantValidator.ValidateAsync(dto);
@@ -135,7 +165,8 @@ public class ProductController : ControllerBase
         try
         {
             var variant = await _productService.AddVariantAsync(id, dto);
-            return CreatedAtAction(nameof(GetBySlug), new { slug = "" }, variant);
+            var product = await _productService.GetByIdAsync(id);
+            return CreatedAtAction(nameof(GetBySlug), new { slug = product.Slug }, variant);
         }
         catch (KeyNotFoundException)
         {
@@ -162,6 +193,7 @@ public class ProductController : ControllerBase
     }
 
     [HttpPatch("{id}/variants/{variantId}/stock")]
+    [Authorize(Roles = "admin")]
     public async Task<ActionResult> UpdateStock(int id, int variantId, UpdateStockDto dto)
     {
         var validation = await _stockValidator.ValidateAsync(dto);
@@ -180,6 +212,7 @@ public class ProductController : ControllerBase
     }
 
     [HttpDelete("{id}/variants/{variantId}")]
+    [Authorize(Roles = "admin")]
     public async Task<ActionResult> DeleteVariant(int id, int variantId)
     {
         try

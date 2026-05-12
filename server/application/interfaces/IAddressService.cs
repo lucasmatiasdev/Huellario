@@ -1,4 +1,4 @@
-using domain.dtos.Address;
+using application.dtos.Address;
 
 namespace application.interfaces;
 

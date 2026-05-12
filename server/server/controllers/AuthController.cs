@@ -1,5 +1,5 @@
 using application.interfaces;
-using domain.dtos.Auth;
+using application.dtos.Auth;
 using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 

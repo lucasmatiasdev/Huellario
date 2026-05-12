@@ -1,5 +1,5 @@
 using application.interfaces;
-using domain.dtos.Brand;
+using application.dtos.Brand;
 using domain.entities;
 using domain.interfaces;
 using Mapster;
@@ -31,9 +31,9 @@ public class BrandService : IBrandService
         return brand.Adapt<BrandDto>();
     }
 
-    public async Task<IEnumerable<BrandDto>> GetAllAsync()
+    public async Task<IEnumerable<BrandDto>> GetAllAsync(bool activeOnly = true)
     {
-        var brands = await _unitOfWork.Brands.GetAllAsync();
+        var brands = await _unitOfWork.Brands.GetAllAsync(activeOnly);
         return brands.Adapt<IEnumerable<BrandDto>>();
     }
 
@@ -61,7 +61,7 @@ public class BrandService : IBrandService
         if (brand == null)
             throw new KeyNotFoundException("Marca no encontrada");
 
-        await _unitOfWork.Brands.DeleteAsync(id);
+        _unitOfWork.Brands.Remove(brand);
         await _unitOfWork.SaveChangesAsync();
     }
 }

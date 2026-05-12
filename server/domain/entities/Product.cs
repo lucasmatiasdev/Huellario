@@ -1,6 +1,8 @@
+using domain.interfaces;
+
 namespace domain.entities;
 
-public class Product
+public class Product : IAuditableEntity
 {
     public int Id { get; set; }
     public string Name { get; set; } = string.Empty;

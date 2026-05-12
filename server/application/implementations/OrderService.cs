@@ -1,5 +1,5 @@
 using application.interfaces;
-using domain.dtos.Order;
+using application.dtos.Order;
 using domain.entities;
 using domain.enums;
 using domain.interfaces;
@@ -10,6 +10,16 @@ namespace application.implementations;
 public class OrderService : IOrderService
 {
     private readonly IUnitOfWork _unitOfWork;
+
+    private static readonly Dictionary<OrderStatus, HashSet<OrderStatus>> _validTransitions = new()
+    {
+        [OrderStatus.Pending] = [OrderStatus.Confirmed, OrderStatus.Cancelled],
+        [OrderStatus.Confirmed] = [OrderStatus.Shipping, OrderStatus.Cancelled],
+        [OrderStatus.Shipping] = [OrderStatus.Delivered],
+        [OrderStatus.Delivered] = [],
+        [OrderStatus.Cancelled] = [],
+        [OrderStatus.Refunded] = []
+    };
 
     public OrderService(IUnitOfWork unitOfWork)
     {
@@ -29,10 +39,11 @@ public class OrderService : IOrderService
             var order = new Order
             {
                 UserId = userId > 0 ? userId : null,
-                AddressId = dto.IsRetirement ? null : dto.AddressId,
+                SessionId = userId > 0 ? null : sessionId,
+                AddressId = dto.IsPickup ? null : dto.AddressId,
                 OrderDate = DateTime.UtcNow,
                 Status = OrderStatus.Pending,
-                IsRetirement = dto.IsRetirement,
+                IsPickup = dto.IsPickup,
                 Note = dto.Note
             };
 
@@ -102,6 +113,20 @@ public class OrderService : IOrderService
         });
     }
 
+    public async Task<IEnumerable<OrderListDto>> GetBySessionIdAsync(string sessionId)
+    {
+        var orders = await _unitOfWork.Orders.GetBySessionIdAsync(sessionId);
+        return orders.Select(order =>
+        {
+            var dto = order.Adapt<OrderListDto>();
+            dto.ItemCount = order.OrderLines.Sum(ol => ol.Quantity);
+            dto.UserName = order.User != null
+                ? $"{order.User.Name} {order.User.Surname}"
+                : null;
+            return dto;
+        });
+    }
+
     public async Task<IEnumerable<OrderListDto>> GetAllAsync()
     {
         var orders = await _unitOfWork.Orders.GetAllAsync();
@@ -151,10 +176,52 @@ public class OrderService : IOrderService
         }
     }
 
+    public async Task CancelBySessionAsync(int id, string sessionId)
+    {
+        var order = await _unitOfWork.Orders.GetByIdAsync(id)
+            ?? throw new KeyNotFoundException("Pedido no encontrado");
+
+        if (order.SessionId != sessionId)
+            throw new UnauthorizedAccessException("No puedes cancelar un pedido que no te pertenece");
+
+        if (order.Status != OrderStatus.Pending)
+            throw new InvalidOperationException("Solo se pueden cancelar pedidos pendientes");
+
+        await _unitOfWork.BeginTransactionAsync();
+        try
+        {
+            order.Status = OrderStatus.Cancelled;
+
+            foreach (var line in order.OrderLines)
+            {
+                if (line.Variant != null)
+                {
+                    line.Variant.Stock += line.Quantity;
+                }
+            }
+
+            await _unitOfWork.Orders.UpdateAsync(order);
+            await _unitOfWork.SaveChangesAsync();
+            await _unitOfWork.CommitTransactionAsync();
+        }
+        catch
+        {
+            await _unitOfWork.RollbackTransactionAsync();
+            throw;
+        }
+    }
+
     public async Task<OrderDto> UpdateStatusAsync(int id, OrderStatus status)
     {
         var order = await _unitOfWork.Orders.GetByIdAsync(id)
             ?? throw new KeyNotFoundException("Pedido no encontrado");
+
+        if (!_validTransitions.TryGetValue(order.Status, out var validTargets)
+            || !validTargets.Contains(status))
+        {
+            throw new InvalidOperationException(
+                $"No se puede cambiar el estado de {order.Status} a {status}");
+        }
 
         order.Status = status;
         await _unitOfWork.Orders.UpdateAsync(order);

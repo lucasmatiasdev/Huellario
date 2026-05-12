@@ -1,7 +1,8 @@
 using application.interfaces;
-using domain.dtos.Category;
+using application.dtos.Category;
 using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 
 namespace server.controllers;
 
@@ -45,6 +46,7 @@ public class CategoryController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = "admin")]
     public async Task<ActionResult<CategoryDto>> Create(CreateCategoryDto dto)
     {
         var validation = await _createValidator.ValidateAsync(dto);
@@ -56,6 +58,7 @@ public class CategoryController : ControllerBase
     }
 
     [HttpPut("{id}")]
+    [Authorize(Roles = "admin")]
     public async Task<ActionResult> Update(int id, UpdateCategoryDto dto)
     {
         var validation = await _updateValidator.ValidateAsync(dto);
@@ -74,9 +77,17 @@ public class CategoryController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Roles = "admin")]
     public async Task<ActionResult> Delete(int id)
     {
-        await _categoryService.DeleteAsync(id);
-        return NoContent();
+        try
+        {
+            await _categoryService.DeleteAsync(id);
+            return NoContent();
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound();
+        }
     }
 }

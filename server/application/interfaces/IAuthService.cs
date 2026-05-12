@@ -1,4 +1,4 @@
-using domain.dtos.Auth;
+using application.dtos.Auth;
 
 namespace application.interfaces;
 

@@ -1,4 +1,4 @@
-using domain.dtos.Product;
+using application.dtos.Product;
 using FluentValidation;
 
 namespace application.validators.Product;
@@ -13,7 +13,9 @@ public class UpdateProductDtoValidator : AbstractValidator<UpdateProductDto>
 
         RuleFor(x => x.Slug)
             .NotEmpty()
-            .MaximumLength(200);
+            .MaximumLength(200)
+            .Matches(@"^[a-z0-9]+(?:-[a-z0-9]+)*$")
+            .WithMessage("El slug solo puede contener letras minúsculas, números y guiones");
 
         RuleFor(x => x.Description)
             .NotEmpty();

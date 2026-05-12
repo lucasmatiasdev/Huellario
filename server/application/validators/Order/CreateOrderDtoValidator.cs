@@ -1,4 +1,4 @@
-using domain.dtos.Order;
+using application.dtos.Order;
 using FluentValidation;
 
 namespace application.validators.Order;
@@ -9,7 +9,7 @@ public class CreateOrderDtoValidator : AbstractValidator<CreateOrderDto>
     {
         RuleFor(x => x.AddressId)
             .GreaterThan(0)
-            .When(x => !x.IsRetirement);
+            .When(x => !x.IsPickup);
 
         RuleFor(x => x.Note)
             .MaximumLength(2000)

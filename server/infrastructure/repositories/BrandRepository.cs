@@ -24,8 +24,10 @@ public class BrandRepository : IBrandRepository
         return await _context.Brands.FirstOrDefaultAsync(b => b.Slug == slug);
     }
 
-    public async Task<IEnumerable<Brand>> GetAllAsync()
+    public async Task<IEnumerable<Brand>> GetAllAsync(bool activeOnly = true)
     {
+        if (activeOnly)
+            return await _context.Brands.Where(b => b.IsActive).ToListAsync();
         return await _context.Brands.ToListAsync();
     }
 
@@ -40,12 +42,8 @@ public class BrandRepository : IBrandRepository
         return Task.CompletedTask;
     }
 
-    public async Task DeleteAsync(int id)
+    public void Remove(Brand brand)
     {
-        var brand = await GetByIdAsync(id);
-        if (brand != null)
-        {
-            _context.Brands.Remove(brand);
-        }
+        _context.Brands.Remove(brand);
     }
 }

@@ -51,5 +51,11 @@ public class AddressConfiguration : IEntityTypeConfiguration<Address>
             .WithMany()
             .HasForeignKey(a => a.UserId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasIndex(a => a.UserId);
+
+        builder.HasIndex(a => new { a.UserId, a.Type })
+            .HasFilter("\"IsDefault\" = true")
+            .IsUnique();
     }
 }

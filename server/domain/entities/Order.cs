@@ -10,9 +10,10 @@ public class Order
     public DateTime OrderDate { get; set; }
     public decimal Total { get; set; }
     public OrderStatus Status { get; set; }
-    public bool IsRetirement { get; set; }
+    public bool IsPickup { get; set; }
     public string? Note { get; set; }
     public string? TrackingNumber { get; set; }
+    public string? SessionId { get; set; }
 
     public User? User { get; set; }
     public Address? Address { get; set; }

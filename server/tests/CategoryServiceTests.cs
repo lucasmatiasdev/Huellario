@@ -1,5 +1,5 @@
 using application.implementations;
-using domain.dtos.Category;
+using application.dtos.Category;
 using domain.entities;
 using domain.interfaces;
 using Moq;
@@ -75,7 +75,7 @@ public class CategoryServiceTests
             new() { Id = 1, Name = "Perros", Slug = "perros" },
             new() { Id = 2, Name = "Gatos", Slug = "gatos" }
         };
-        _repositoryMock.Setup(r => r.GetAllAsync()).ReturnsAsync(categories);
+        _repositoryMock.Setup(r => r.GetAllAsync(It.IsAny<bool>())).ReturnsAsync(categories);
 
         var result = await _sut.GetAllAsync();
 
@@ -127,11 +127,20 @@ public class CategoryServiceTests
     {
         var category = new Category { Id = 1, Name = "Perros", Slug = "perros" };
         _repositoryMock.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(category);
-        _repositoryMock.Setup(r => r.DeleteAsync(1));
 
         await _sut.DeleteAsync(1);
 
-        _repositoryMock.Verify(r => r.DeleteAsync(1), Times.Once);
+        _repositoryMock.Verify(r => r.Remove(category), Times.Once);
         _unitOfWorkMock.Verify(u => u.SaveChangesAsync(default), Times.Once);
+    }
+
+    [Fact]
+    public async Task DeleteAsync_ShouldThrowKeyNotFoundException_WhenCategoryDoesNotExist()
+    {
+        _repositoryMock.Setup(r => r.GetByIdAsync(It.IsAny<int>())).ReturnsAsync((Category?)null);
+
+        var act = () => _sut.DeleteAsync(999);
+
+        await act.ShouldThrowAsync<KeyNotFoundException>();
     }
 }

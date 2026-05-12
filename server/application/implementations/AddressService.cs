@@ -1,5 +1,5 @@
 using application.interfaces;
-using domain.dtos.Address;
+using application.dtos.Address;
 using domain.entities;
 using domain.interfaces;
 using Mapster;
@@ -43,7 +43,7 @@ public class AddressService : IAddressService
         {
             if (address.IsDefault)
             {
-                var currentDefault = await _unitOfWork.Addresses.GetDefaultByUserIdAsync(userId);
+                var currentDefault = await _unitOfWork.Addresses.GetDefaultByUserIdAsync(userId, address.Type);
                 if (currentDefault != null)
                 {
                     currentDefault.IsDefault = false;
@@ -77,7 +77,7 @@ public class AddressService : IAddressService
         {
             if (address.IsDefault && !wasDefault)
             {
-                var currentDefault = await _unitOfWork.Addresses.GetDefaultByUserIdAsync(userId);
+                var currentDefault = await _unitOfWork.Addresses.GetDefaultByUserIdAsync(userId, address.Type);
                 if (currentDefault != null && currentDefault.Id != id)
                 {
                     currentDefault.IsDefault = false;
@@ -115,7 +115,7 @@ public class AddressService : IAddressService
         await _unitOfWork.BeginTransactionAsync();
         try
         {
-            var currentDefault = await _unitOfWork.Addresses.GetDefaultByUserIdAsync(userId);
+            var currentDefault = await _unitOfWork.Addresses.GetDefaultByUserIdAsync(userId, address.Type);
             if (currentDefault != null && currentDefault.Id != id)
             {
                 currentDefault.IsDefault = false;

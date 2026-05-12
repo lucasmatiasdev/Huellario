@@ -1,4 +1,4 @@
-using domain.dtos.Order;
+using application.dtos.Order;
 using FluentValidation;
 
 namespace application.validators.Order;

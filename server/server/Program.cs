@@ -1,24 +1,20 @@
 using System.Text;
 using application.implementations;
 using application.interfaces;
-using domain.dtos.Brand;
-using domain.dtos.Category;
-using domain.dtos.CartItem;
-using domain.dtos.Product;
-using domain.dtos.Address;
-using domain.dtos.Order;
-using domain.entities;
+using application;
+using application.mappers;
 using domain.interfaces;
 using infrastructure.data;
-using infrastructure.repositories;
+using infrastructure.data.interceptors;
+using infrastructure.repositories; // needed by UnitOfWork at runtime
 using infrastructure.seed;
 using infrastructure.identity;
 using infrastructure.implementations;
+using infrastructure.Services;
 using server.Middleware;
-using server.services;
+
 using application.validators.Product;
 using FluentValidation;
-using Mapster;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -28,48 +24,7 @@ using Microsoft.OpenApi.Models;
 // Cargar variables de entorno desde .env (buscando hacia arriba en el árbol de directorios)
 DotNetEnv.Env.TraversePath().Load();
 
-// Mapster config
-TypeAdapterConfig<Category, CategoryDto>.NewConfig();
-TypeAdapterConfig<CreateCategoryDto, Category>.NewConfig();
-TypeAdapterConfig<UpdateCategoryDto, Category>.NewConfig()
-    .IgnoreNullValues(true);
-TypeAdapterConfig<Brand, BrandDto>.NewConfig();
-TypeAdapterConfig<CreateBrandDto, Brand>.NewConfig();
-TypeAdapterConfig<UpdateBrandDto, Brand>.NewConfig()
-    .IgnoreNullValues(true);
-TypeAdapterConfig<Product, ProductDto>.NewConfig()
-    .Map(dest => dest.Images, src => src.Images)
-    .Map(dest => dest.Variants, src => src.Variants);
-TypeAdapterConfig<Product, ProductListDto>.NewConfig()
-    .Map(dest => dest.MainImageUrl, src =>
-        src.Images.Where(i => i.IsMain).Select(i => i.Url).FirstOrDefault()
-        ?? src.Images.Select(i => i.Url).FirstOrDefault());
-TypeAdapterConfig<CreateProductDto, Product>.NewConfig();
-TypeAdapterConfig<UpdateProductDto, Product>.NewConfig();
-TypeAdapterConfig<Variant, VariantDto>.NewConfig();
-TypeAdapterConfig<CreateVariantDto, Variant>.NewConfig();
-TypeAdapterConfig<ProductImage, ProductImageDto>.NewConfig();
-TypeAdapterConfig<CartItem, CartItemDto>.NewConfig()
-    .Map(dest => dest.ProductName, src => src.Product != null ? src.Product.Name : string.Empty)
-    .Map(dest => dest.ProductSlug, src => src.Product != null ? src.Product.Slug : string.Empty)
-    .Map(dest => dest.ProductImageUrl, src =>
-        src.Product != null
-            ? src.Product.Images.Where(i => i.IsMain).Select(i => i.Url).FirstOrDefault()
-              ?? src.Product.Images.Select(i => i.Url).FirstOrDefault()
-            : null)
-    .Map(dest => dest.VariantName, src => src.Variant != null ? src.Variant.Name : string.Empty)
-    .Map(dest => dest.UnitPrice, src =>
-        src.Variant != null ? src.Variant.Price
-        : src.Product != null ? src.Product.Price
-        : 0)
-    .Map(dest => dest.CartItemId, src => $"{src.ProductId}-{src.VariantId}");
-TypeAdapterConfig<CreateCartItemDto, CartItem>.NewConfig();
-TypeAdapterConfig<UpdateCartItemDto, CartItem>.NewConfig();
-TypeAdapterConfig<UpdateAddressDto, Address>.NewConfig()
-    .IgnoreNullValues(true);
-TypeAdapterConfig<Order, OrderListDto>.NewConfig();
-TypeAdapterConfig<OrderLine, OrderLineDto>.NewConfig();
-
+MappingProfile.Configure();
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -113,7 +68,8 @@ builder.Services.AddSwaggerGen(c =>
 
 builder.Services.AddDbContext<HuellarioDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"),
-        o => o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery)));
+        o => o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery))
+        .AddInterceptors(new AuditableInterceptor()));
 
 builder.Services.AddIdentity<HuellarioIdentityUser, IdentityRole>(options =>
 {
@@ -126,9 +82,10 @@ builder.Services.AddIdentity<HuellarioIdentityUser, IdentityRole>(options =>
 .AddEntityFrameworkStores<HuellarioDbContext>()
 .AddDefaultTokenProviders();
 
-var jwtSettings = builder.Configuration.GetSection("Jwt");
-var keyString = jwtSettings["Key"] ?? throw new InvalidOperationException("JWT Key is missing in configuration. Check your .env file or appsettings.json.");
-var jwtKey = Encoding.UTF8.GetBytes(keyString);
+builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("Jwt"));
+var jwtSettings = builder.Configuration.GetSection("Jwt").Get<JwtSettings>()
+    ?? throw new InvalidOperationException("JWT settings are missing in configuration.");
+var jwtKey = Encoding.UTF8.GetBytes(jwtSettings.Key);
 
 builder.Services.AddAuthentication(options =>
 {
@@ -143,8 +100,8 @@ builder.Services.AddAuthentication(options =>
         ValidateAudience = true,
         ValidateLifetime = true,
         ValidateIssuerSigningKey = true,
-        ValidIssuer = jwtSettings["Issuer"],
-        ValidAudience = jwtSettings["Audience"],
+        ValidIssuer = jwtSettings.Issuer,
+        ValidAudience = jwtSettings.Audience,
         IssuerSigningKey = new SymmetricSecurityKey(jwtKey),
         ClockSkew = TimeSpan.Zero
     };
@@ -163,19 +120,13 @@ builder.Services.AddCors(options =>
 
 // DI registrations
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
-builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
+builder.Services.AddScoped<IIdentityService, IdentityService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
-builder.Services.AddScoped<IBrandRepository, BrandRepository>();
 builder.Services.AddScoped<IBrandService, BrandService>();
-builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddScoped<IProductService, ProductService>();
-builder.Services.AddScoped<IAddressRepository, AddressRepository>();
 builder.Services.AddScoped<IAddressService, AddressService>();
-builder.Services.AddScoped<ICartRepository, CartRepository>();
 builder.Services.AddScoped<ICartService, CartService>();
-builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddScoped<IOrderService, OrderService>();
 
 builder.Services.AddValidatorsFromAssemblyContaining<CreateProductDtoValidator>();

@@ -34,4 +34,5 @@ public class HuellarioDbContext : IdentityDbContext<HuellarioIdentityUser>
     public DbSet<Product> Products => Set<Product>();
     public DbSet<Address> Addresses => Set<Address>();   
     public DbSet<CartItem> CartItems => Set<CartItem>();
+    public DbSet<Variant> Variants => Set<Variant>();
 }

@@ -38,6 +38,19 @@ public class OrderRepository : IOrderRepository
             .ToListAsync();
     }
 
+    public async Task<IEnumerable<Order>> GetBySessionIdAsync(string sessionId)
+    {
+        return await _context.Orders
+            .Where(o => o.SessionId == sessionId)
+            .Include(o => o.OrderLines)
+                .ThenInclude(ol => ol.Product)
+            .Include(o => o.OrderLines)
+                .ThenInclude(ol => ol.Variant)
+            .Include(o => o.Address)
+            .OrderByDescending(o => o.OrderDate)
+            .ToListAsync();
+    }
+
     public async Task<IEnumerable<Order>> GetAllAsync()
     {
         return await _context.Orders

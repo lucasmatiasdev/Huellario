@@ -1,6 +1,6 @@
 using application.interfaces;
-using domain.dtos;
-using domain.dtos.Product;
+using application.dtos;
+using application.dtos.Product;
 using domain.entities;
 using domain.interfaces;
 using Mapster;
@@ -74,7 +74,7 @@ public class ProductService : IProductService
         if (product == null)
             throw new KeyNotFoundException("Producto no encontrado");
 
-        await _unitOfWork.Products.DeleteAsync(id);
+        _unitOfWork.Products.Remove(product);
         await _unitOfWork.SaveChangesAsync();
     }
 
@@ -83,6 +83,12 @@ public class ProductService : IProductService
         var product = await _unitOfWork.Products.GetByIdAsync(productId);
         if (product == null)
             throw new KeyNotFoundException("Producto no encontrado");
+
+        if (dto.IsMain)
+        {
+            foreach (var img in product.Images)
+                img.IsMain = false;
+        }
 
         var image = dto.Adapt<ProductImage>();
         image.ProductId = productId;
@@ -101,7 +107,28 @@ public class ProductService : IProductService
         if (image == null)
             throw new KeyNotFoundException("Imagen no encontrada");
 
+        var wasMain = image.IsMain;
         product.Images.Remove(image);
+
+        if (wasMain && product.Images.Count > 0)
+            product.Images.First().IsMain = true;
+
+        await _unitOfWork.SaveChangesAsync();
+    }
+
+    public async Task SetMainImageAsync(int productId, int imageId)
+    {
+        var product = await _unitOfWork.Products.GetByIdAsync(productId);
+        if (product == null)
+            throw new KeyNotFoundException("Producto no encontrado");
+
+        var image = product.Images.FirstOrDefault(i => i.Id == imageId);
+        if (image == null)
+            throw new KeyNotFoundException("Imagen no encontrada");
+
+        foreach (var img in product.Images)
+            img.IsMain = (img.Id == imageId);
+
         await _unitOfWork.SaveChangesAsync();
     }
 

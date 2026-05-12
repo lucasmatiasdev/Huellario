@@ -20,8 +20,10 @@ public class CategoryRepository : ICategoryRepository
     {
         return await _context.Categories.FirstOrDefaultAsync(c => c.Slug == slug);
     }
-    public async Task<IEnumerable<Category>> GetAllAsync()
+    public async Task<IEnumerable<Category>> GetAllAsync(bool activeOnly = true)
     {
+        if (activeOnly)
+            return await _context.Categories.Where(c => c.IsActive).ToListAsync();
         return await _context.Categories.ToListAsync();
     }
     public async Task AddAsync(Category category)
@@ -33,12 +35,8 @@ public class CategoryRepository : ICategoryRepository
         _context.Categories.Update(category);
         return Task.CompletedTask;
     }
-    public async Task DeleteAsync(int id)
+    public void Remove(Category category)
     {
-        var category = await GetByIdAsync(id);
-        if (category != null)
-        {
-            _context.Categories.Remove(category);
-        }
+        _context.Categories.Remove(category);
     }
 }

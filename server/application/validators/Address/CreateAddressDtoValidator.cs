@@ -1,4 +1,4 @@
-using domain.dtos.Address;
+using application.dtos.Address;
 using FluentValidation;
 
 namespace application.validators.Address;

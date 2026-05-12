@@ -1,4 +1,5 @@
 using domain.entities;
+using domain.enums;
 using domain.interfaces;
 using infrastructure.data;
 using Microsoft.EntityFrameworkCore;
@@ -32,10 +33,10 @@ public class AddressRepository : IAddressRepository
         return await _context.Addresses.CountAsync(a => a.UserId == userId);
     }
 
-    public async Task<Address?> GetDefaultByUserIdAsync(int userId)
+    public async Task<Address?> GetDefaultByUserIdAsync(int userId, AddressType type)
     {
         return await _context.Addresses
-            .FirstOrDefaultAsync(a => a.UserId == userId && a.IsDefault);
+            .FirstOrDefaultAsync(a => a.UserId == userId && a.IsDefault && a.Type == type);
     }
 
     public async Task AddAsync(Address address)

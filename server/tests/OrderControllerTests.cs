@@ -1,6 +1,6 @@
 using System.Security.Claims;
 using application.interfaces;
-using domain.dtos.Order;
+using application.dtos.Order;
 using domain.enums;
 using FluentValidation;
 using FluentValidation.Results;
@@ -65,7 +65,7 @@ public class OrderControllerTests
     {
         SetAuthenticatedUser(1);
         MockValid(_validatorMock);
-        var dto = new CreateOrderDto { AddressId = 1, IsRetirement = false };
+        var dto = new CreateOrderDto { AddressId = 1, IsPickup = false };
         var expected = new OrderDto { Id = 1, UserId = 1 };
         _orderServiceMock.Setup(s => s.CreateOrderAsync(1, "", dto)).ReturnsAsync(expected);
 
@@ -83,7 +83,7 @@ public class OrderControllerTests
     {
         SetAnonymousUser();
         MockValid(_validatorMock);
-        var dto = new CreateOrderDto { AddressId = 1, IsRetirement = false };
+        var dto = new CreateOrderDto { AddressId = 1, IsPickup = false };
         var expected = new OrderDto { Id = 2 };
         _orderServiceMock.Setup(s => s.CreateOrderAsync(0, "abc-123", dto)).ReturnsAsync(expected);
 
@@ -100,7 +100,7 @@ public class OrderControllerTests
     {
         SetAuthenticatedUser(1);
         MockInvalid(_validatorMock);
-        var dto = new CreateOrderDto { IsRetirement = false };
+        var dto = new CreateOrderDto { IsPickup = false };
 
         var result = await _sut.Create(dto, null);
 
@@ -112,7 +112,7 @@ public class OrderControllerTests
     {
         SetAuthenticatedUser(1);
         MockValid(_validatorMock);
-        var dto = new CreateOrderDto { AddressId = 1, IsRetirement = false };
+        var dto = new CreateOrderDto { AddressId = 1, IsPickup = false };
         _orderServiceMock.Setup(s => s.CreateOrderAsync(1, "", dto))
             .ThrowsAsync(new InvalidOperationException("El carrito está vacío"));
 
@@ -127,7 +127,7 @@ public class OrderControllerTests
     {
         SetAuthenticatedUser(1);
         MockValid(_validatorMock);
-        var dto = new CreateOrderDto { AddressId = 1, IsRetirement = false };
+        var dto = new CreateOrderDto { AddressId = 1, IsPickup = false };
         _orderServiceMock.Setup(s => s.CreateOrderAsync(1, "", dto))
             .ThrowsAsync(new InvalidOperationException("Stock insuficiente"));
 

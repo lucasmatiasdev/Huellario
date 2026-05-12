@@ -1,4 +1,4 @@
-using domain.dtos.CartItem;
+using application.dtos.CartItem;
 
 namespace application.interfaces;
 

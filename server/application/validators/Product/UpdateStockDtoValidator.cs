@@ -1,4 +1,4 @@
-using domain.dtos.Product;
+using application.dtos.Product;
 using FluentValidation;
 
 namespace application.validators.Product;

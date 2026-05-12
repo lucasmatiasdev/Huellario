@@ -1,4 +1,4 @@
-using domain.dtos.Auth;
+using application.dtos.Auth;
 using FluentValidation;
 
 namespace application.validators.Auth;

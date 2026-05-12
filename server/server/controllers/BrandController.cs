@@ -1,7 +1,8 @@
 using application.interfaces;
-using domain.dtos.Brand;
+using application.dtos.Brand;
 using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 
 namespace server.controllers;
 
@@ -45,6 +46,7 @@ public class BrandController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = "admin")]
     public async Task<ActionResult<BrandDto>> Create(CreateBrandDto dto)
     {
         var validation = await _createValidator.ValidateAsync(dto);
@@ -56,6 +58,7 @@ public class BrandController : ControllerBase
     }
 
     [HttpPut("{id}")]
+    [Authorize(Roles = "admin")]
     public async Task<ActionResult> Update(int id, UpdateBrandDto dto)
     {
         var validation = await _updateValidator.ValidateAsync(dto);
@@ -74,9 +77,17 @@ public class BrandController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Roles = "admin")]
     public async Task<ActionResult> Delete(int id)
     {
-        await _brandService.DeleteAsync(id);
-        return NoContent();
+        try
+        {
+            await _brandService.DeleteAsync(id);
+            return NoContent();
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound();
+        }
     }
 }

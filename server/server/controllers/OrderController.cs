@@ -1,6 +1,6 @@
 using System.Security.Claims;
 using application.interfaces;
-using domain.dtos.Order;
+using application.dtos.Order;
 using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -85,6 +85,37 @@ public class OrderController : ControllerBase
         try
         {
             await _orderService.CancelAsync(id, userId);
+            return Ok();
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound();
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
+    }
+
+    [AllowAnonymous]
+    [HttpGet("session/{sessionId}")]
+    public async Task<ActionResult<IEnumerable<OrderListDto>>> GetBySession(string sessionId)
+    {
+        var orders = await _orderService.GetBySessionIdAsync(sessionId);
+        return Ok(orders);
+    }
+
+    [AllowAnonymous]
+    [HttpPost("session/{sessionId}/{id}/cancel")]
+    public async Task<ActionResult> CancelBySession(int id, string sessionId)
+    {
+        try
+        {
+            await _orderService.CancelBySessionAsync(id, sessionId);
             return Ok();
         }
         catch (KeyNotFoundException)

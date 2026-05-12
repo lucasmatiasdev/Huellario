@@ -1,5 +1,5 @@
 using application.interfaces;
-using domain.dtos.Order;
+using application.dtos.Order;
 using domain.enums;
 using FluentValidation;
 using FluentValidation.Results;
@@ -132,5 +132,63 @@ public class AdminOrderControllerTests
         var result = await _sut.UpdateStatus(999, dto);
 
         result.Result.ShouldBeOfType<NotFoundResult>();
+    }
+
+    [Fact]
+    public async Task UpdateStatus_ShouldReturnBadRequest_WhenInvalidTransition()
+    {
+        MockValid(_validatorMock);
+        var dto = new UpdateOrderStatusDto { Status = OrderStatus.Delivered };
+        _orderServiceMock.Setup(s => s.UpdateStatusAsync(1, OrderStatus.Delivered))
+            .ThrowsAsync(new InvalidOperationException("No se puede cambiar el estado de Pending a Delivered"));
+
+        var result = await _sut.UpdateStatus(1, dto);
+
+        var bad = result.Result.ShouldBeOfType<BadRequestObjectResult>();
+        bad.Value.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public async Task UpdateStatus_ShouldReturnBadRequest_WhenTransitionFromTerminalState()
+    {
+        MockValid(_validatorMock);
+        var dto = new UpdateOrderStatusDto { Status = OrderStatus.Confirmed };
+        _orderServiceMock.Setup(s => s.UpdateStatusAsync(1, OrderStatus.Confirmed))
+            .ThrowsAsync(new InvalidOperationException("No se puede cambiar el estado de Cancelled a Confirmed"));
+
+        var result = await _sut.UpdateStatus(1, dto);
+
+        var bad = result.Result.ShouldBeOfType<BadRequestObjectResult>();
+        bad.Value.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public async Task UpdateStatus_ShouldReturnOk_WhenValidTransition_PendingToConfirmed()
+    {
+        MockValid(_validatorMock);
+        var dto = new UpdateOrderStatusDto { Status = OrderStatus.Confirmed };
+        var updated = new OrderDto { Id = 1, Status = OrderStatus.Confirmed };
+        _orderServiceMock.Setup(s => s.UpdateStatusAsync(1, OrderStatus.Confirmed)).ReturnsAsync(updated);
+
+        var result = await _sut.UpdateStatus(1, dto);
+
+        var ok = result.Result.ShouldBeOfType<OkObjectResult>();
+        var order = ok.Value.ShouldBeOfType<OrderDto>();
+        order.Status.ShouldBe(OrderStatus.Confirmed);
+    }
+
+    [Fact]
+    public async Task UpdateStatus_ShouldReturnOk_WhenValidTransition_ConfirmedToShipping()
+    {
+        MockValid(_validatorMock);
+        var dto = new UpdateOrderStatusDto { Status = OrderStatus.Shipping };
+        var updated = new OrderDto { Id = 1, Status = OrderStatus.Shipping };
+        _orderServiceMock.Setup(s => s.UpdateStatusAsync(1, OrderStatus.Shipping)).ReturnsAsync(updated);
+
+        var result = await _sut.UpdateStatus(1, dto);
+
+        var ok = result.Result.ShouldBeOfType<OkObjectResult>();
+        var order = ok.Value.ShouldBeOfType<OrderDto>();
+        order.Status.ShouldBe(OrderStatus.Shipping);
     }
 }

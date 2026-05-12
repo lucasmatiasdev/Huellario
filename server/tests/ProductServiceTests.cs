@@ -1,5 +1,5 @@
 using application.implementations;
-using domain.dtos.Product;
+using application.dtos.Product;
 using domain.entities;
 using domain.interfaces;
 using Moq;
@@ -128,12 +128,21 @@ public class ProductServiceTests
     {
         var product = new Product { Id = 1, Name = "Royal Canin", Slug = "royal-canin" };
         _repositoryMock.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(product);
-        _repositoryMock.Setup(r => r.DeleteAsync(1));
 
         await _sut.DeleteAsync(1);
 
-        _repositoryMock.Verify(r => r.DeleteAsync(1), Times.Once);
+        _repositoryMock.Verify(r => r.Remove(product), Times.Once);
         _unitOfWorkMock.Verify(u => u.SaveChangesAsync(default), Times.Once);
+    }
+
+    [Fact]
+    public async Task DeleteAsync_ShouldThrowKeyNotFoundException_WhenProductDoesNotExist()
+    {
+        _repositoryMock.Setup(r => r.GetByIdAsync(It.IsAny<int>())).ReturnsAsync((Product?)null);
+
+        var act = () => _sut.DeleteAsync(999);
+
+        await act.ShouldThrowAsync<KeyNotFoundException>();
     }
 
     [Fact]
@@ -322,5 +331,122 @@ public class ProductServiceTests
         var act = () => _sut.DeleteVariantAsync(1, 999);
 
         await act.ShouldThrowAsync<KeyNotFoundException>();
+    }
+
+    [Fact]
+    public async Task AddImageAsync_ShouldUnsetPreviousMainImage_WhenNewImageIsMain()
+    {
+        var existingMain = new ProductImage { Id = 1, Url = "/old.jpg", IsMain = true };
+        var product = new Product { Id = 1, Name = "Producto", Images = new List<ProductImage> { existingMain } };
+        var dto = new ProductImageDto { Url = "/new.jpg", IsMain = true, DisplayOrder = 1 };
+        _repositoryMock.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(product);
+
+        var result = await _sut.AddImageAsync(1, dto);
+
+        existingMain.IsMain.ShouldBeFalse();
+        _unitOfWorkMock.Verify(u => u.SaveChangesAsync(default), Times.Once);
+    }
+
+    [Fact]
+    public async Task AddImageAsync_ShouldNotUnsetPreviousImages_WhenNewImageIsNotMain()
+    {
+        var existingMain = new ProductImage { Id = 1, Url = "/old.jpg", IsMain = true };
+        var product = new Product { Id = 1, Name = "Producto", Images = new List<ProductImage> { existingMain } };
+        var dto = new ProductImageDto { Url = "/new.jpg", IsMain = false, DisplayOrder = 1 };
+        _repositoryMock.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(product);
+
+        var result = await _sut.AddImageAsync(1, dto);
+
+        existingMain.IsMain.ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task DeleteImageAsync_ShouldReassignMainToFirstRemainingImage_WhenDeletingMainImage()
+    {
+        var mainImage = new ProductImage { Id = 1, Url = "/main.jpg", IsMain = true };
+        var otherImage = new ProductImage { Id = 2, Url = "/other.jpg", IsMain = false };
+        var product = new Product { Id = 1, Images = new List<ProductImage> { mainImage, otherImage } };
+        _repositoryMock.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(product);
+
+        await _sut.DeleteImageAsync(1, 1);
+
+        otherImage.IsMain.ShouldBeTrue();
+        product.Images.ShouldNotContain(i => i.Id == 1);
+        _unitOfWorkMock.Verify(u => u.SaveChangesAsync(default), Times.Once);
+    }
+
+    [Fact]
+    public async Task DeleteImageAsync_ShouldNotReassignMain_WhenDeletingNonMainImage()
+    {
+        var mainImage = new ProductImage { Id = 1, Url = "/main.jpg", IsMain = true };
+        var otherImage = new ProductImage { Id = 2, Url = "/other.jpg", IsMain = false };
+        var product = new Product { Id = 1, Images = new List<ProductImage> { mainImage, otherImage } };
+        _repositoryMock.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(product);
+
+        await _sut.DeleteImageAsync(1, 2);
+
+        mainImage.IsMain.ShouldBeTrue();
+        product.Images.ShouldNotContain(i => i.Id == 2);
+    }
+
+    [Fact]
+    public async Task DeleteImageAsync_ShouldLeaveEmptyImagesList_WhenDeletingOnlyImage()
+    {
+        var onlyImage = new ProductImage { Id = 1, Url = "/only.jpg", IsMain = true };
+        var product = new Product { Id = 1, Images = new List<ProductImage> { onlyImage } };
+        _repositoryMock.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(product);
+
+        await _sut.DeleteImageAsync(1, 1);
+
+        product.Images.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task SetMainImageAsync_ShouldSetImageAsMainAndUnsetOthers()
+    {
+        var img1 = new ProductImage { Id = 1, Url = "/img1.jpg", IsMain = true };
+        var img2 = new ProductImage { Id = 2, Url = "/img2.jpg", IsMain = false };
+        var product = new Product { Id = 1, Images = new List<ProductImage> { img1, img2 } };
+        _repositoryMock.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(product);
+
+        await _sut.SetMainImageAsync(1, 2);
+
+        img1.IsMain.ShouldBeFalse();
+        img2.IsMain.ShouldBeTrue();
+        _unitOfWorkMock.Verify(u => u.SaveChangesAsync(default), Times.Once);
+    }
+
+    [Fact]
+    public async Task SetMainImageAsync_ShouldThrowKeyNotFoundException_WhenProductDoesNotExist()
+    {
+        _repositoryMock.Setup(r => r.GetByIdAsync(It.IsAny<int>())).ReturnsAsync((Product?)null);
+
+        var act = () => _sut.SetMainImageAsync(999, 1);
+
+        await act.ShouldThrowAsync<KeyNotFoundException>();
+    }
+
+    [Fact]
+    public async Task SetMainImageAsync_ShouldThrowKeyNotFoundException_WhenImageDoesNotExist()
+    {
+        var product = new Product { Id = 1, Images = new List<ProductImage>() };
+        _repositoryMock.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(product);
+
+        var act = () => _sut.SetMainImageAsync(1, 999);
+
+        await act.ShouldThrowAsync<KeyNotFoundException>();
+    }
+
+    [Fact]
+    public async Task UpdateStockAsync_ShouldSetStockToZero()
+    {
+        var variant = new Variant { Id = 2, Stock = 5 };
+        var product = new Product { Id = 1, Variants = new List<Variant> { variant } };
+        _repositoryMock.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(product);
+
+        await _sut.UpdateStockAsync(1, 2, 0);
+
+        variant.Stock.ShouldBe(0);
+        _unitOfWorkMock.Verify(u => u.SaveChangesAsync(default), Times.Once);
     }
 }

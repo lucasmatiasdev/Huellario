@@ -1,5 +1,5 @@
 using application.implementations;
-using domain.dtos.Address;
+using application.dtos.Address;
 using domain.entities;
 using domain.enums;
 using domain.interfaces;
@@ -114,9 +114,9 @@ public class AddressServiceTests
     public async Task AddAsync_ShouldUnsetPreviousDefault_WhenNewAddressIsDefault()
     {
         var dto = new CreateAddressDto { Street = "Av Siempre Viva", Number = "123", City = "Springfield", ZipCode = "12345", IsDefault = true, Type = AddressType.Shipping };
-        var currentDefault = new Address { Id = 1, UserId = 1, Street = "Default", Number = "0", City = "City", ZipCode = "00000", IsDefault = true };
+        var currentDefault = new Address { Id = 1, UserId = 1, Street = "Default", Number = "0", City = "City", ZipCode = "00000", IsDefault = true, Type = AddressType.Shipping };
         _repositoryMock.Setup(r => r.GetCountByUserIdAsync(1)).ReturnsAsync(2);
-        _repositoryMock.Setup(r => r.GetDefaultByUserIdAsync(1)).ReturnsAsync(currentDefault);
+        _repositoryMock.Setup(r => r.GetDefaultByUserIdAsync(1, AddressType.Shipping)).ReturnsAsync(currentDefault);
 
         await _sut.AddAsync(1, dto);
 
@@ -132,7 +132,7 @@ public class AddressServiceTests
 
         await _sut.AddAsync(1, dto);
 
-        _repositoryMock.Verify(r => r.GetDefaultByUserIdAsync(It.IsAny<int>()), Times.Never);
+        _repositoryMock.Verify(r => r.GetDefaultByUserIdAsync(It.IsAny<int>(), It.IsAny<AddressType>()), Times.Never);
     }
 
     [Fact]
@@ -175,11 +175,11 @@ public class AddressServiceTests
     [Fact]
     public async Task UpdateAsync_ShouldUnsetPreviousDefault_WhenSettingAsDefault()
     {
-        var existing = new Address { Id = 2, UserId = 1, Street = "Street", Number = "123", City = "City", ZipCode = "12345", IsDefault = false };
-        var currentDefault = new Address { Id = 1, UserId = 1, Street = "Default", Number = "456", City = "City", ZipCode = "12345", IsDefault = true };
+        var existing = new Address { Id = 2, UserId = 1, Street = "Street", Number = "123", City = "City", ZipCode = "12345", IsDefault = false, Type = AddressType.Shipping };
+        var currentDefault = new Address { Id = 1, UserId = 1, Street = "Default", Number = "456", City = "City", ZipCode = "12345", IsDefault = true, Type = AddressType.Shipping };
         var dto = new UpdateAddressDto { Street = "Street", Number = "123", City = "City", ZipCode = "12345", IsDefault = true, Type = AddressType.Shipping };
         _repositoryMock.Setup(r => r.GetByIdAsync(2)).ReturnsAsync(existing);
-        _repositoryMock.Setup(r => r.GetDefaultByUserIdAsync(1)).ReturnsAsync(currentDefault);
+        _repositoryMock.Setup(r => r.GetDefaultByUserIdAsync(1, AddressType.Shipping)).ReturnsAsync(currentDefault);
 
         await _sut.UpdateAsync(1, 2, dto);
 
@@ -236,10 +236,10 @@ public class AddressServiceTests
     [Fact]
     public async Task SetDefaultAsync_ShouldUnsetPreviousDefault()
     {
-        var address = new Address { Id = 2, UserId = 1, Street = "Street", Number = "123", City = "City", ZipCode = "12345", IsDefault = false };
-        var currentDefault = new Address { Id = 1, UserId = 1, Street = "Default", Number = "456", City = "City", ZipCode = "12345", IsDefault = true };
+        var address = new Address { Id = 2, UserId = 1, Street = "Street", Number = "123", City = "City", ZipCode = "12345", IsDefault = false, Type = AddressType.Shipping };
+        var currentDefault = new Address { Id = 1, UserId = 1, Street = "Default", Number = "456", City = "City", ZipCode = "12345", IsDefault = true, Type = AddressType.Shipping };
         _repositoryMock.Setup(r => r.GetByIdAsync(2)).ReturnsAsync(address);
-        _repositoryMock.Setup(r => r.GetDefaultByUserIdAsync(1)).ReturnsAsync(currentDefault);
+        _repositoryMock.Setup(r => r.GetDefaultByUserIdAsync(1, AddressType.Shipping)).ReturnsAsync(currentDefault);
 
         await _sut.SetDefaultAsync(1, 2);
 
@@ -249,9 +249,9 @@ public class AddressServiceTests
     [Fact]
     public async Task SetDefaultAsync_ShouldNotUnset_WhenSameAddressIsAlreadyDefault()
     {
-        var address = new Address { Id = 1, UserId = 1, Street = "Street", Number = "123", City = "City", ZipCode = "12345", IsDefault = true };
+        var address = new Address { Id = 1, UserId = 1, Street = "Street", Number = "123", City = "City", ZipCode = "12345", IsDefault = true, Type = AddressType.Shipping };
         _repositoryMock.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(address);
-        _repositoryMock.Setup(r => r.GetDefaultByUserIdAsync(1)).ReturnsAsync(address);
+        _repositoryMock.Setup(r => r.GetDefaultByUserIdAsync(1, AddressType.Shipping)).ReturnsAsync(address);
 
         await _sut.SetDefaultAsync(1, 1);
 
@@ -277,5 +277,56 @@ public class AddressServiceTests
         var act = () => _sut.SetDefaultAsync(1, 1);
 
         await act.ShouldThrowAsync<KeyNotFoundException>();
+    }
+
+    [Fact]
+    public async Task AddAsync_ShouldNotUnsetBillingDefault_WhenAddingShippingDefault()
+    {
+        var shippingDefault = new Address { Id = 1, UserId = 1, Street = "Shipping", Number = "1", City = "City", ZipCode = "12345", IsDefault = true, Type = AddressType.Shipping };
+        var billingDefault = new Address { Id = 2, UserId = 1, Street = "Billing", Number = "2", City = "City", ZipCode = "12345", IsDefault = true, Type = AddressType.Billing };
+        var dto = new CreateAddressDto { Street = "New Shipping", Number = "3", City = "City", ZipCode = "12345", IsDefault = true, Type = AddressType.Shipping };
+        _repositoryMock.Setup(r => r.GetCountByUserIdAsync(1)).ReturnsAsync(2);
+        _repositoryMock.Setup(r => r.GetDefaultByUserIdAsync(1, AddressType.Shipping)).ReturnsAsync(shippingDefault);
+
+        await _sut.AddAsync(1, dto);
+
+        shippingDefault.IsDefault.ShouldBeFalse();
+        billingDefault.IsDefault.ShouldBeTrue();
+        _repositoryMock.Verify(r => r.GetDefaultByUserIdAsync(1, It.Is<AddressType>(t => t == AddressType.Shipping)), Times.Once);
+        _repositoryMock.Verify(r => r.GetDefaultByUserIdAsync(1, It.Is<AddressType>(t => t == AddressType.Billing)), Times.Never);
+    }
+
+    [Fact]
+    public async Task SetDefaultAsync_ShouldOnlyUnsetDefaultOfSameType()
+    {
+        var address = new Address { Id = 3, UserId = 1, Street = "New", Number = "3", City = "City", ZipCode = "12345", IsDefault = false, Type = AddressType.Billing };
+        var currentBillingDefault = new Address { Id = 2, UserId = 1, Street = "Billing", Number = "2", City = "City", ZipCode = "12345", IsDefault = true, Type = AddressType.Billing };
+        var shippingDefault = new Address { Id = 1, UserId = 1, Street = "Shipping", Number = "1", City = "City", ZipCode = "12345", IsDefault = true, Type = AddressType.Shipping };
+        _repositoryMock.Setup(r => r.GetByIdAsync(3)).ReturnsAsync(address);
+        _repositoryMock.Setup(r => r.GetDefaultByUserIdAsync(1, AddressType.Billing)).ReturnsAsync(currentBillingDefault);
+
+        await _sut.SetDefaultAsync(1, 3);
+
+        currentBillingDefault.IsDefault.ShouldBeFalse();
+        shippingDefault.IsDefault.ShouldBeTrue();
+        _repositoryMock.Verify(r => r.GetDefaultByUserIdAsync(1, It.Is<AddressType>(t => t == AddressType.Billing)), Times.Once());
+        _repositoryMock.Verify(r => r.GetDefaultByUserIdAsync(1, It.Is<AddressType>(t => t == AddressType.Shipping)), Times.Never);
+    }
+
+    [Fact]
+    public async Task UpdateAsync_ShouldUnsetDefaultOfNewType_WhenTypeChangedAndSetAsDefault()
+    {
+        var existing = new Address { Id = 2, UserId = 1, Street = "Street", Number = "123", City = "City", ZipCode = "12345", IsDefault = false, Type = AddressType.Shipping };
+        var billingDefault = new Address { Id = 1, UserId = 1, Street = "Billing Default", Number = "456", City = "City", ZipCode = "12345", IsDefault = true, Type = AddressType.Billing };
+        var dto = new UpdateAddressDto { Street = "Street", Number = "123", City = "City", ZipCode = "12345", IsDefault = true, Type = AddressType.Billing };
+        _repositoryMock.Setup(r => r.GetByIdAsync(2)).ReturnsAsync(existing);
+        _repositoryMock.Setup(r => r.GetDefaultByUserIdAsync(1, AddressType.Billing)).ReturnsAsync(billingDefault);
+
+        await _sut.UpdateAsync(1, 2, dto);
+
+        existing.Type.ShouldBe(AddressType.Billing);
+        existing.IsDefault.ShouldBeTrue();
+        billingDefault.IsDefault.ShouldBeFalse();
+        _repositoryMock.Verify(r => r.GetDefaultByUserIdAsync(1, AddressType.Billing), Times.Once);
     }
 }

@@ -19,12 +19,14 @@ public class CartRepository : ICartRepository
         if (userId > 0)
             return await _context.CartItems
                 .Include(c => c.Product)
+                    .ThenInclude(p => p.Images)
                 .Include(c => c.Variant)
                 .Where(c => c.UserId == userId)
                 .ToListAsync();
 
         return await _context.CartItems
             .Include(c => c.Product)
+                .ThenInclude(p => p.Images)
             .Include(c => c.Variant)
             .Where(c => c.SessionId == sessionId && c.UserId == 0)
             .ToListAsync();

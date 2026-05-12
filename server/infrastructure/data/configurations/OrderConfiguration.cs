@@ -26,7 +26,7 @@ public class OrderConfiguration : IEntityTypeConfiguration<Order>
             .HasDefaultValue(OrderStatus.Pending)
             .HasConversion<int>();
 
-        builder.Property(o => o.IsRetirement)
+        builder.Property(o => o.IsPickup)
             .IsRequired()
             .HasDefaultValue(false);
 
@@ -35,6 +35,11 @@ public class OrderConfiguration : IEntityTypeConfiguration<Order>
 
         builder.Property(o => o.TrackingNumber)
             .HasMaxLength(100);
+
+        builder.Property(o => o.SessionId)
+            .HasMaxLength(100);
+
+        builder.HasIndex(o => o.SessionId);
 
         builder.HasOne(o => o.User)
             .WithMany()
@@ -53,35 +58,3 @@ public class OrderConfiguration : IEntityTypeConfiguration<Order>
     }
 }
 
-public class OrderLineConfiguration : IEntityTypeConfiguration<OrderLine>
-{
-    public void Configure(EntityTypeBuilder<OrderLine> builder)
-    {
-        builder.ToTable("OrderLines");
-
-        builder.HasKey(ol => ol.Id);
-
-        builder.Property(ol => ol.Quantity)
-            .IsRequired()
-            .HasDefaultValue(1);
-
-        builder.Property(ol => ol.UnitPrice)
-            .IsRequired()
-            .HasColumnType("decimal(18,2)");
-
-        builder.HasOne(ol => ol.Order)
-            .WithMany(o => o.OrderLines)
-            .HasForeignKey(ol => ol.OrderId)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        builder.HasOne(ol => ol.Product)
-            .WithMany()
-            .HasForeignKey(ol => ol.ProductId)
-            .OnDelete(DeleteBehavior.Restrict);
-
-        builder.HasOne(ol => ol.Variant)
-            .WithMany()
-            .HasForeignKey(ol => ol.VariantId)
-            .OnDelete(DeleteBehavior.Restrict);
-    }
-}

@@ -67,6 +67,11 @@ public class ProductRepository : IProductRepository
         return (items, totalCount);
     }
 
+    public async Task<Variant?> GetVariantByIdAsync(int id)
+    {
+        return await _context.Variants.FindAsync(id);
+    }
+
     public async Task AddAsync(Product product)
     {
         await _context.Products.AddAsync(product);
@@ -78,12 +83,8 @@ public class ProductRepository : IProductRepository
         return Task.CompletedTask;
     }
 
-    public async Task DeleteAsync(int id)
+    public void Remove(Product product)
     {
-        var product = await _context.Products.FindAsync(id);
-        if (product != null)
-        {
-            _context.Products.Remove(product);
-        }
+        _context.Products.Remove(product);
     }
 }

@@ -1,5 +1,5 @@
 using application.implementations;
-using domain.dtos.Brand;
+using application.dtos.Brand;
 using domain.entities;
 using domain.interfaces;
 using Moq;
@@ -75,7 +75,7 @@ public class BrandServiceTests
             new() { Id = 1, Name = "Royal Canin", Slug = "royal-canin" },
             new() { Id = 2, Name = "Purina", Slug = "purina" }
         };
-        _repositoryMock.Setup(r => r.GetAllAsync()).ReturnsAsync(brands);
+        _repositoryMock.Setup(r => r.GetAllAsync(It.IsAny<bool>())).ReturnsAsync(brands);
 
         var result = await _sut.GetAllAsync();
 
@@ -127,11 +127,20 @@ public class BrandServiceTests
     {
         var brand = new Brand { Id = 1, Name = "Royal Canin", Slug = "royal-canin" };
         _repositoryMock.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(brand);
-        _repositoryMock.Setup(r => r.DeleteAsync(1));
 
         await _sut.DeleteAsync(1);
 
-        _repositoryMock.Verify(r => r.DeleteAsync(1), Times.Once);
+        _repositoryMock.Verify(r => r.Remove(brand), Times.Once);
         _unitOfWorkMock.Verify(u => u.SaveChangesAsync(default), Times.Once);
+    }
+
+    [Fact]
+    public async Task DeleteAsync_ShouldThrowKeyNotFoundException_WhenBrandDoesNotExist()
+    {
+        _repositoryMock.Setup(r => r.GetByIdAsync(It.IsAny<int>())).ReturnsAsync((Brand?)null);
+
+        var act = () => _sut.DeleteAsync(999);
+
+        await act.ShouldThrowAsync<KeyNotFoundException>();
     }
 }

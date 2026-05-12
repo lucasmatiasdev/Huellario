@@ -1,6 +1,6 @@
 using System.Security.Claims;
 using application.interfaces;
-using domain.dtos.Address;
+using application.dtos.Address;
 using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

@@ -10,6 +10,8 @@ public class CartItemConfiguration : IEntityTypeConfiguration<CartItem>
     {
         builder.ToTable("CartItems");
         builder.HasKey(x => new { x.UserId, x.SessionId, x.ProductId, x.VariantId });
+        builder.HasIndex(x => x.UserId);
+        builder.HasIndex(x => x.SessionId);
         builder.Property(x => x.SessionId).HasMaxLength(36).IsRequired();
         builder.Property(x => x.Quantity).IsRequired();
         builder.HasOne(x => x.Product)

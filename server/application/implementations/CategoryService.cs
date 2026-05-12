@@ -1,5 +1,5 @@
 using application.interfaces;
-using domain.dtos.Category;
+using application.dtos.Category;
 using domain.entities;
 using domain.interfaces;
 using Mapster;
@@ -27,9 +27,9 @@ public class CategoryService : ICategoryService
             throw new KeyNotFoundException("Categoría no encontrada");
         return category.Adapt<CategoryDto>();
     }
-    public async Task<IEnumerable<CategoryDto>> GetAllAsync()
+    public async Task<IEnumerable<CategoryDto>> GetAllAsync(bool activeOnly = true)
     {
-        var categories = await _unitOfWork.Categories.GetAllAsync();
+        var categories = await _unitOfWork.Categories.GetAllAsync(activeOnly);
         return categories.Adapt<IEnumerable<CategoryDto>>();
     }
     public async Task<CategoryDto> AddAsync(CreateCategoryDto dto)
@@ -54,7 +54,7 @@ public class CategoryService : ICategoryService
         if (category == null)
             throw new KeyNotFoundException("Categoría no encontrada");
         
-        await _unitOfWork.Categories.DeleteAsync(id);
+        _unitOfWork.Categories.Remove(category);
         await _unitOfWork.SaveChangesAsync();
     }
 }

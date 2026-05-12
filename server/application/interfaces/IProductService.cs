@@ -1,5 +1,5 @@
-using domain.dtos;
-using domain.dtos.Product;
+using application.dtos;
+using application.dtos.Product;
 
 namespace application.interfaces;
 
@@ -13,6 +13,7 @@ public interface IProductService
     Task DeleteAsync(int id);
     Task<ProductImageDto> AddImageAsync(int productId, ProductImageDto dto);
     Task DeleteImageAsync(int productId, int imageId);
+    Task SetMainImageAsync(int productId, int imageId);
     Task<VariantDto> AddVariantAsync(int productId, CreateVariantDto dto);
     Task UpdateVariantAsync(int productId, int variantId, CreateVariantDto dto);
     Task UpdateStockAsync(int productId, int variantId, int stock);

@@ -1,6 +1,6 @@
 using System.Security.Claims;
 using application.interfaces;
-using domain.dtos.CartItem;
+using application.dtos.CartItem;
 using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -47,8 +47,15 @@ public class CartController : ControllerBase
 
         dto.SessionId ??= sessionId;
         var userId = GetUserId();
-        var cart = await _cartService.AddItemAsync(userId, dto);
-        return Ok(cart);
+        try
+        {
+            var cart = await _cartService.AddItemAsync(userId, dto);
+            return Ok(cart);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     [AllowAnonymous]
@@ -60,8 +67,15 @@ public class CartController : ControllerBase
             return BadRequest(validation.Errors);
 
         var userId = GetUserId();
-        var cart = await _cartService.UpdateQuantityAsync(userId, dto);
-        return Ok(cart);
+        try
+        {
+            var cart = await _cartService.UpdateQuantityAsync(userId, dto);
+            return Ok(cart);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     [AllowAnonymous]
@@ -92,8 +106,15 @@ public class CartController : ControllerBase
     public async Task<ActionResult<CartDto>> TransferCart(TransferCartDto dto)
     {
         var userId = GetUserId();
-        var cart = await _cartService.TransferCartAsync(userId, dto.SessionId);
-        return Ok(cart);
+        try
+        {
+            var cart = await _cartService.TransferCartAsync(userId, dto.SessionId);
+            return Ok(cart);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     private int GetUserId()

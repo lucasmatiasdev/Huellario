@@ -1,4 +1,4 @@
-using domain.dtos.Category;
+using application.dtos.Category;
 using FluentValidation;
 
 namespace application.validators.Category;
@@ -13,7 +13,9 @@ public class CreateCategoryDtoValidator : AbstractValidator<CreateCategoryDto>
 
         RuleFor(x => x.Slug)
             .NotEmpty()
-            .MaximumLength(100);
+            .MaximumLength(100)
+            .Matches(@"^[a-z0-9]+(?:-[a-z0-9]+)*$")
+            .WithMessage("El slug solo puede contener letras minúsculas, números y guiones");
 
         RuleFor(x => x.Description)
             .MaximumLength(500)
